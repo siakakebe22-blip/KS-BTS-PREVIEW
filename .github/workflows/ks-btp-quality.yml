@@ -35,6 +35,17 @@ jobs:
           import fs from 'node:fs';
           const html = fs.readFileSync('demo/index.html', 'utf8');
           const sw = fs.readFileSync('demo/sw.js', 'utf8');
+          const app = fs.readFileSync('demo/app.js', 'utf8');
+          const bootstrap = fs.readFileSync('demo/offline-bootstrap.js', 'utf8');
+          if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
+            throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
+          }
+          if (!sw.includes('ks-btp-demo-offline-v7') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+            throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
+          }
+          if (!bootstrap.includes('await import("./app.js")')) {
+            throw new Error('Démarrage de l’application après initialisation du stockage absent.');
+          }
           const required = ['index.html', 'style.css', 'app.js', 'offline-storage.js', 'offline-bootstrap.js', 'manifest.webmanifest'];
           for (const file of required) {
             if (!fs.existsSync('demo/' + file)) throw new Error('Ressource absente : ' + file);
