@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a">
+<title>KS BTP — Essai hors connexion</title>
+<style>
+*{box-sizing:border-box}body{font:16px system-ui,sans-serif;max-width:760px;margin:20px auto;padding:0 14px;color:#172334;background:#f4f6f9}
+main{background:#fff;padding:20px;border-radius:14px;box-shadow:0 4px 18px #14243a12}
+h1{font-size:23px}h2{font-size:18px;margin-top:24px}.note{background:#eaf2ff;padding:12px;border-radius:8px}
+label{display:block;font-weight:600;margin:12px 0 5px}input{width:100%;padding:12px;border:1px solid #cbd3df;border-radius:8px;font:inherit}
+button{padding:12px 15px;border:0;border-radius:8px;background:#14243a;color:#fff;font-weight:600;margin:10px 6px 4px 0}
+button.secondary{background:#e8edf4;color:#172334}button.danger{background:#9d2929}
+#result{white-space:pre-wrap;background:#f1f4f8;padding:14px;border-radius:8px;min-height:90px;margin-top:14px}
+.item{padding:10px;background:#f7f8fa;border-radius:8px;margin:8px 0}.muted{font-size:14px;color:#536174}a{color:#1457a6}
+</style>
+</head>
+<body><main>
+<h1>KS BTP — Test réel du stockage hors connexion</h1>
+<p class="note"><strong>Environnement de test indépendant.</strong> Les éléments ajoutés ici sont des données fictives de test. Ils sont enregistrés dans IndexedDB sur ce site de prévisualisation uniquement. L'application principale KS BTP n'est pas modifiée.</p>
+<h2>1. Ajouter un matériel de test</h2>
+<label for="material">Nom du matériel</label><input id="material" placeholder="Ex. Bétonnière TEST">
+<label for="quantity">Quantité</label><input id="quantity" type="number" min="1" value="1">
+<button id="addMaterial">Enregistrer le matériel</button>
+<h2>2. Ajouter un chantier de test</h2>
+<label for="site">Nom du chantier</label><input id="site" placeholder="Ex. Chantier TEST Conakry">
+<label for="location">Lieu</label><input id="location" placeholder="Ex. Conakry">
+<button id="addSite">Enregistrer le chantier</button>
+<h2>3. Vérifier la sauvegarde</h2>
+<button id="refresh" class="secondary">Relire les données enregistrées</button>
+<button id="clear" class="danger">Effacer les données de test</button>
+<div id="result" role="status" aria-live="polite">Chargement du stockage local…</div>
+<p class="muted">Test à effectuer : ajoute un matériel et un chantier, ferme complètement cet onglet, rouvre cette page, puis appuie sur « Relire les données enregistrées ». Les deux éléments doivent toujours apparaître.</p>
+<p><a href="./index.html">Retour à la page de vérification</a> · <a href="https://siakakebe22-blip.github.io/KS-BTS/">Ouvrir l'application principale</a></p>
+</main>
+<script src="./offline-storage.js"></script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const output=$("result");
+let snapshot=null;
+const show=s=>output.textContent=s;
+const emptySnapshot=()=>({company:{name:"KS BTP — TEST"},currency:"GNF",threshold:0,materials:[],sites:[],movements:[],maintenance:[],documents:[]});
+async function load(){
+ try{
+  snapshot=await KSBtpOfflineStorage.readSnapshot()||emptySnapshot();
+  ["materials","sites","movements","maintenance","documents"].forEach(k=>{if(!Array.isArray(snapshot[k]))snapshot[k]=[];});
+  render("Stockage IndexedDB lu avec succès.");
+ }catch(e){show("Erreur de lecture IndexedDB : "+e.message);}
+}
+function render(message){
+ const materials=snapshot.materials||[],sites=snapshot.sites||[];
+ const lines=[message,"Matériels enregistrés : "+materials.length,"Chantiers enregistrés : "+sites.length,""];
+ lines.push("MATÉRIELS");
+ if(!materials.length)lines.push("Aucun matériel de test.");
+ materials.forEach(x=>lines.push("• "+x.name+" — quantité : "+x.quantity));
+ lines.push("","CHANTIERS");
+ if(!sites.length)lines.push("Aucun chantier de test.");
+ sites.forEach(x=>lines.push("• "+x.name+" — lieu : "+(x.location||"Non précisé")));
+ show(lines.join("\n"));
+}
+async function save(message){
+ try{await KSBtpOfflineStorage.saveSnapshot(snapshot);const check=await KSBtpOfflineStorage.readSnapshot();if(!check)throw new Error("Données non retrouvées après écriture.");snapshot=check;render(message+"\nVérification après enregistrement : OK.");}
+ catch(e){show("Erreur d'enregistrement : "+e.message);}
+}
+$("addMaterial").addEventListener("click",async()=>{
+ const name=$("material").value.trim(),quantity=Number($("quantity").value);
+ if(!name||!Number.isInteger(quantity)||quantity<1){show("Saisis un nom de matériel et une quantité entière supérieure à zéro.");return;}
+ snapshot.materials.push({id:"TEST-MAT-"+Date.now(),name,quantity,isTest:true,createdAt:new Date().toISOString()});
+ $("material").value="";await save("Matériel de test enregistré.");
+});
+$("addSite").addEventListener("click",async()=>{
+ const name=$("site").value.trim(),location=$("location").value.trim();
+ if(!name){show("Saisis le nom du chantier.");return;}
+ snapshot.sites.push({id:"TEST-SITE-"+Date.now(),name,location,isTest:true,createdAt:new Date().toISOString()});
+ $("site").value="";$("location").value="";await save("Chantier de test enregistré.");
+});
+$("refresh").addEventListener("click",load);
+$("clear").addEventListener("click",async()=>{
+ if(!confirm("Effacer les données de cette page de test dans IndexedDB ? Cette action ne touche pas l'application principale."))return;
+ snapshot=emptySnapshot();await save("Données de test effacées.");
+});
+load();
+</script>
+</body></html>
