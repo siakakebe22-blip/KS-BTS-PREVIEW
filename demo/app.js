@@ -412,7 +412,43 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");
   if(confirm("Supprimer ce chantier ?")){logAction("Suppression","Chantier",siteName||"Chantier",mid);db.sites=db.sites.filter(s=>s.id!==mid);save();render()}
 }if(act==="add-movement")addMovement();if(act==="open-voucher")openVoucherForm(b.dataset.type);if(act==="print-voucher"){const d=(db.documents||[]).find(x=>x.id===mid);if(d)printVoucher(d)}if(act==="add-maintenance")openMaintenance();if(act==="edit-maintenance")openMaintenance(db.maintenance.find(x=>x.id===mid));if(act==="delete-maintenance"){if(confirm("Supprimer cette intervention de maintenance ?")){const entry=db.maintenance.find(x=>x.id===mid);logAction("Suppression","Maintenance",(entry?.materialRef||"")+" — "+(entry?.materialName||"")+" · "+(entry?.description||""),mid);db.maintenance=db.maintenance.filter(x=>x.id!==mid);save();render()}}if(act==="export-csv")exportCsv();if(act==="print-activity")printActivityLog();if(act==="backup")download("ks-btp-sauvegarde.json",JSON.stringify(db,null,2),"application/json");if(act==="save-settings"){db.company=$("#companySetting").value.trim()||"KS BTP";db.currency=$("#currencySetting").value;db.threshold=Number($("#thresholdSetting").value)||0;logAction("Modification","Paramètres","Entreprise : "+db.company+" · Devise : "+db.currency+" · Seuil : "+db.threshold);save();alert("Paramètres enregistrés.");render()}});
 $("#movementForm").addEventListener("submit",submitMovement);$("#movementType").addEventListener("change",updateMovementForm);$("#movementMaterial").addEventListener("change",updateMovementForm);$("#movementSite").addEventListener("change",updateMovementForm);$("#closeMovement").onclick=closeMovement;$("#cancelMovement").onclick=closeMovement;$("#voucherForm").addEventListener("submit",submitVoucher);$("#maintenanceForm").addEventListener("submit",submitMaintenance);$("#closeMaintenance").onclick=closeMaintenance;$("#cancelMaintenance").onclick=closeMaintenance;$("#closeVoucher").onclick=closeVoucher;$("#cancelVoucher").onclick=closeVoucher;
-$("#itemForm").addEventListener("submit",e=>{e.preventDefault();const old=db.materials.find(m=>m.id===$("#itemId").value);if(old&&Number($("#itemQuantity").value)!==Number(old.quantity)){alert("Pour modifier une quantité existante, utilisez un mouvement de stock afin de conserver la traçabilité.");$("#itemQuantity").value=old.quantity;return}const data={id:old?.id||id(),ref:old?.ref||nextMaterialRef(),name:$("#itemName").value.trim(),category:$("#itemCategory").value,type:$("#itemType").value,quantity:Number($("#itemQuantity").value),unit:$("#itemUnit").value.trim(),threshold:Number($("#itemThreshold").value)||0,location:$("#itemLocation").value};if(old){const changes=[];for(const key of ["name","category","type","unit","threshold","location"]){if(String(old[key]??"")!==String(data[key]??""))changes.push(key+" : "+String(old[key]??"—")+" → "+String(data[key]??"—"))}Object.assign(old,data);logAction("Modification","Matériel",data.ref+" — "+data.name+(changes.length?" · "+changes.join("; "):" · Aucun changement de champ"),old.id)}else{db.materials.push(data);logAction("Création","Matériel",data.ref+" — "+data.name+" · Quantité initiale : "+data.quantity+" "+data.unit,data.id)}save();closeItem();render()});
+$("#itemForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(storageLoadError){alert(storageLoadError);return}
+ const form=e.currentTarget;
+ if(!form.reportValidity())return;
+ const old=db.materials.find(m=>m.id===$("#itemId").value);
+ const quantity=Number($("#itemQuantity").value),threshold=Number($("#itemThreshold").value);
+ const name=$("#itemName").value.trim(),unit=$("#itemUnit").value.trim();
+ if(!name||!unit||!Number.isFinite(quantity)||quantity<0||!Number.isFinite(threshold)||threshold<0){alert("Vérifiez la désignation, l'unité, la quantité et le seuil.");return}
+ if(old&&quantity!==Number(old.quantity)){
+  alert("Pour modifier une quantité existante, utilisez un mouvement de stock afin de conserver la traçabilité.");
+  $("#itemQuantity").value=old.quantity;return;
+ }
+ const location=$("#itemLocation").value||"central";
+ const loc=stockLocation(location);
+ const data={
+  id:old?.id||id(),ref:old?.ref||nextMaterialRef(),name,
+  category:$("#itemCategory").value,type:$("#itemType").value,
+  quantity,unit,threshold,location,
+  stockBalances:old?.stockBalances||[{locationId:loc.id,locationName:loc.name,quantity}]
+ };
+ if(old){
+  const changes=[];
+  for(const key of ["name","category","type","unit","threshold","location"]){
+   if(String(old[key]??"")!==String(data[key]??""))changes.push(key+" : "+String(old[key]??"—")+" → "+String(data[key]??"—"));
+  }
+  Object.assign(old,data);
+  logAction("Modification","Matériel",data.ref+" — "+data.name+(changes.length?" · "+changes.join("; "):" · Aucun changement de champ"),old.id);
+ }else{
+  db.materials.push(data);
+  logAction("Création","Matériel",data.ref+" — "+data.name+" · Quantité initiale : "+data.quantity+" "+data.unit,data.id);
+ }
+ const saved=await save();
+ closeItem();
+ render();
+ if(!saved)alert("Le matériel est visible dans l'inventaire et la copie locale a été conservée, mais la sauvegarde hors ligne secondaire a signalé une erreur. Faites une sauvegarde JSON dès que possible.");
+});
 $("#closeDialog").onclick=closeItem;$("#cancelDialog").onclick=closeItem;$("#menuToggle").onclick=()=>$("#sidebar").classList.toggle("open");
 function validateBackup(value){
   if(!value||typeof value!=="object"||Array.isArray(value)||!Array.isArray(value.materials))return false;
