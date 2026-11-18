@@ -42,7 +42,14 @@ function stockLocation(value){
   return site?{id:site.id,name:site.name}:{id:"__unallocated__",name:"Stock historique à répartir"};
 }
 function ensureStockBalances(item){
-  if(Array.isArray(item.stockBalances))return item.stockBalances;
+  if(Array.isArray(item.stockBalances)){
+    // Répare les fiches anciennes qui possèdent un tableau vide malgré un stock positif.
+    if(item.stockBalances.length===0&&Number(item.quantity)>0){
+      const loc=stockLocation(item.location);
+      item.stockBalances=[{locationId:loc.id,locationName:loc.name,quantity:Number(item.quantity)}];
+    }
+    return item.stockBalances;
+  }
   const loc=stockLocation(item.location);
   item.stockBalances=[{locationId:loc.id,locationName:loc.name,quantity:Math.max(0,Number(item.quantity)||0)}];
   return item.stockBalances;
