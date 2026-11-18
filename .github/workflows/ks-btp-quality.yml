@@ -40,7 +40,7 @@ jobs:
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
           }
-          if (!sw.includes('ks-btp-demo-offline-v15') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+          if (!sw.includes('ks-btp-demo-offline-v16') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
             throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
           }
           if (!bootstrap.includes('await import("./app.js")')) {
@@ -69,6 +69,12 @@ jobs:
           }
           if (!app.includes('duplicateRefs') || !app.includes('orphanMovements') || !app.includes('invalidBalances')) {
             throw new Error('Détection des anomalies de stock et d’historique incomplète.');
+          }
+          if (!html.includes('ESPACE DE TRAVAIL') || !html.includes('PARC ET CHANTIERS') || !html.includes('STOCK ET OPÉRATIONS') || !html.includes('SUIVI ET CONTRÔLE') || !html.includes('ADMINISTRATION')) {
+            throw new Error('Menu principal non organisé en rubriques.');
+          }
+          if (!app.includes('Matériels présents') || !app.includes('Référence(s)') || !app.includes('site-overview')) {
+            throw new Error('Contenu synthétique de la page chantiers absent.');
           }
           if (!app.includes('function sitesPage(el)') || !app.includes('Stock par unité') || !app.includes('site-grid') || !app.includes('siteStatusFilter') || !app.includes('siteSearch')) {
             throw new Error('Page chantiers modernisée, recherche ou filtres absents.');
