@@ -40,7 +40,7 @@ jobs:
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
           }
-          if (!sw.includes('ks-btp-demo-offline-v11') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+          if (!sw.includes('ks-btp-demo-offline-v12') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
             throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
           }
           if (!bootstrap.includes('await import("./app.js")')) {
@@ -60,6 +60,15 @@ jobs:
           }
           if (!html.includes('data-page="activity"') || !app.includes('function logAction(') || !app.includes('function activityPage(') || !app.includes('function printActivityLog(') || !app.includes('Enregistrer en PDF') || !app.includes('activityLog:[]')) {
             throw new Error('Journal automatique ou impression PDF absente.');
+          }
+          if (!app.includes('function stockByUnit()') || !app.includes('unités distinctes') || !app.includes('m.threshold??db.threshold')) {
+            throw new Error('Synthèse des stocks par unité ou seuil zéro non géré.');
+          }
+          if (!app.includes('if(storageLoadError)') || !app.includes('Aucune écriture ne sera autorisée')) {
+            throw new Error('Protection contre l’écrasement de données locales illisibles absente.');
+          }
+          if (!app.includes('logAction("Suppression","Chantier"') || !app.includes('logAction("Suppression","Matériel"') || !app.includes('logAction("Suppression","Maintenance"')) {
+            throw new Error('Traçabilité des suppressions absente.');
           }
           const storage = fs.readFileSync('demo/offline-storage.js', 'utf8');
           if (!storage.includes('const DB_VERSION=2') || !storage.includes('const DB_NAME="ks_btp_safe_store"') || !storage.includes('const HISTORY_LIMIT=10') || !storage.includes('readHistory') || !storage.includes('const LEGACY_DB_NAME="ks_btp_demo_offline"')) {
