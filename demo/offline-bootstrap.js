@@ -32,10 +32,18 @@ if(localRaw){
 }
 const snapshotIsValid=validData(snapshot);
 
-if(localIsValid&&snapshotIsValid&&recordCount(snapshot)>recordCount(localData)){
-  // Une copie plus riche ne doit jamais être remplacée par un stockage vide/incomplet.
-  localStorage.setItem(KEY,JSON.stringify(snapshot));
-  status.textContent="Une sauvegarde locale plus complète a été détectée et protégée. Vérifiez vos données avant de poursuivre.";
+if(localIsValid&&snapshotIsValid){
+  // Le nombre d'enregistrements ne prouve jamais qu'une copie est plus récente :
+  // une suppression légitime réduit ce nombre. En cas de divergence, ne choisir
+  // et ne remplacer aucune copie automatiquement. La copie IndexedDB reste
+  // disponible dans l'outil de récupération et dans l'historique de sauvegarde.
+  const localCopy=JSON.stringify(localData);
+  const backupCopy=JSON.stringify(snapshot);
+  if(localCopy===backupCopy){
+    status.textContent="Stockage local et sauvegarde de sécurité identiques. Données vérifiées.";
+  }else{
+    status.textContent="ALERTE : deux copies KS BTP différentes ont été détectées. La copie localStorage reste active ; la sauvegarde IndexedDB est conservée sans remplacement automatique. Avant toute restauration, téléchargez les deux copies depuis l’outil de récupération.";
+  }
 }else if(localIsValid){
   try{
     await window.KSBtpOfflineStorage.saveSnapshot(localData);
