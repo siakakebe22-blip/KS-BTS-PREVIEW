@@ -182,5 +182,35 @@ $("#itemForm").addEventListener("submit",e=>{e.preventDefault();const old=db.mat
 $("#closeDialog").onclick=closeItem;$("#cancelDialog").onclick=closeItem;$("#menuToggle").onclick=()=>$("#sidebar").classList.toggle("open");
 document.addEventListener("change",e=>{if(e.target.id==="restoreFile"&&e.target.files[0]){const reader=new FileReader();reader.onload=()=>{try{const value=JSON.parse(reader.result);if(!value||!Array.isArray(value.materials))throw Error();if(confirm("Remplacer les données locales par cette sauvegarde ?")){db={...initial,...value};save();render();alert("Sauvegarde restaurée.")}}catch{alert("Fichier de sauvegarde invalide.")}};reader.readAsText(e.target.files[0])}});
 $("#todayLabel").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-if("serviceWorker" in navigator && location.protocol!=="file:")window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+// Vérification des mises à jour : les fichiers sont téléchargés uniquement avec Internet.
+if("serviceWorker" in navigator && location.protocol!=="file:"){
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(refreshing)return;
+    refreshing=true;
+    window.location.reload();
+  });
+  const offerUpdate=registration=>{
+    const waiting=registration.waiting;
+    if(!waiting||!navigator.serviceWorker.controller||waiting.dataset?.prompted==="yes")return;
+    if(waiting.dataset)waiting.dataset.prompted="yes";
+    const accepted=window.confirm("Une mise à jour de KS BTP est disponible. Vos données enregistrées seront conservées. Installer maintenant ?");
+    if(accepted)waiting.postMessage({type:"SKIP_WAITING"});
+  };
+  window.addEventListener("load",async()=>{
+    try{
+      const registration=await navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"});
+      offerUpdate(registration);
+      registration.addEventListener("updatefound",()=>{
+        const installing=registration.installing;
+        if(!installing)return;
+        installing.addEventListener("statechange",()=>{
+          if(installing.state==="installed")offerUpdate(registration);
+        });
+      });
+      if(navigator.onLine)registration.update().catch(()=>{});
+      window.addEventListener("online",()=>registration.update().catch(()=>{}));
+    }catch(error){console.warn("Vérification des mises à jour indisponible",error);}
+  });
+}
 go("dashboard");
