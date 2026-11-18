@@ -85,7 +85,7 @@ jobs:
           if (!app.includes('balances.some(x=>!Number.isFinite(Number(x.quantity))||Number(x.quantity)<0)') || !app.includes('Math.abs(aggregate-balanceTotal)>0.0001')) {
             throw new Error('Une écriture pourrait écraser une quantité invalide ou une ventilation incohérente.');
           }
-          if (!app.includes('balance.locationId') || !app.includes('Emplacement non identifié') || !app.includes('quantity:resolved?resolved.name')) {
+          if (!app.includes('balance.locationId') || !app.includes('Emplacement non identifié') || !app.includes('locationName:resolved?resolved.name')) {
             throw new Error('Les emplacements inconnus ou quantités historiques ne sont pas préservés.');
           }
           if (!app.includes('if(storageLoadError)') || !app.includes('Aucune écriture ne sera autorisée')) {
