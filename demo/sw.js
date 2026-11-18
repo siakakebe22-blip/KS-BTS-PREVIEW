@@ -1,4 +1,4 @@
-const CACHE="ks-btp-demo-offline-v4";
+const CACHE="ks-btp-demo-offline-v5";
 const ASSETS=["./","./index.html","./style.css","./app.js","./offline-storage.js","./offline-bootstrap.js","./manifest.webmanifest"];
 self.addEventListener("install",event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));
