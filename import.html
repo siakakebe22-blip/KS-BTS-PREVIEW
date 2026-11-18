@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a"><title>KS BTP — Importer une sauvegarde</title>
+<style>
+*{box-sizing:border-box}body{font:16px system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#172334;background:#f4f6f9}
+main{background:#fff;padding:22px;border-radius:14px;box-shadow:0 4px 18px #14243a12}
+h1{font-size:24px}.note{background:#fff4df;padding:12px;border-radius:8px}
+button{padding:12px 16px;border:0;border-radius:8px;background:#14243a;color:#fff;font-weight:600;margin:8px 6px 8px 0}
+button:disabled{opacity:.45}input{display:block;width:100%;padding:12px;border:1px solid #cbd3df;border-radius:8px;background:#fff;margin:12px 0}
+#result{white-space:pre-wrap;background:#f1f4f8;padding:14px;border-radius:8px;min-height:80px}
+a{color:#1457a6}.muted{color:#536174;font-size:14px}
+</style></head>
+<body><main>
+<h1>KS BTP — Importer une sauvegarde JSON</h1>
+<p class="note"><strong>Page séparée de l'application principale.</strong> Elle lit le fichier choisi sur ton téléphone et prépare une copie dans IndexedDB de cette page. Le fichier JSON original n'est ni modifié ni supprimé.</p>
+<h2>1. Choisir le fichier</h2>
+<p>Sélectionne <strong>ks-btp-sauvegarde (1).json</strong> dans le dossier Téléchargements.</p>
+<input id="file" type="file" accept=".json,application/json">
+<h2>2. Vérifier le contenu</h2>
+<p class="muted">L'importation ne sera possible qu'après la lecture d'un fichier JSON valide.</p>
+<button id="import" disabled>Importer dans IndexedDB</button>
+<p id="result" role="status" aria-live="polite">En attente du fichier JSON.</p>
+<p><a href="./index.html">Retour à la page de test</a> · <a href="https://siakakebe22-blip.github.io/KS-BTS/">Ouvrir KS BTP</a></p>
+</main>
+<script src="./offline-storage.js"></script>
+<script>
+"use strict";
+const fileInput=document.getElementById("file");
+const importButton=document.getElementById("import");
+const output=document.getElementById("result");
+let parsedData=null;
+const show=value=>output.textContent=value;
+const count=(data,key)=>Array.isArray(data[key])?data[key].length:0;
+fileInput.addEventListener("change",async()=>{
+  parsedData=null;importButton.disabled=true;
+  const file=fileInput.files&&fileInput.files[0];
+  if(!file){show("Aucun fichier sélectionné.");return;}
+  if(!file.name.toLowerCase().endsWith(".json") && file.type!=="application/json"){
+    show("Fichier refusé : sélectionne un fichier JSON.");return;
+  }
+  try{
+    const raw=await file.text();
+    const data=JSON.parse(raw);
+    if(!data||typeof data!=="object"||Array.isArray(data)){
+      throw new Error("Le fichier doit contenir un objet JSON à la racine.");
+    }
+    parsedData=data;
+    const keys=Object.keys(data);
+    show("Fichier lu : "+file.name+"\nTaille : "+file.size+" octets\nClés détectées : "+(keys.join(", ")||"aucune")+
+      "\nMatériels : "+count(data,"materials")+
+      "\nChantiers : "+count(data,"sites")+
+      "\nMouvements : "+count(data,"movements")+
+      "\nBons : "+count(data,"documents")+
+      "\n\nVérification JSON réussie. Tu peux maintenant lancer l'importation.");
+    importButton.disabled=false;
+  }catch(error){show("Fichier non valide ou illisible : "+error.message);}
+});
+importButton.addEventListener("click",async()=>{
+  if(!parsedData)return;
+  const ok=confirm("Confirmer l'enregistrement de cette sauvegarde dans IndexedDB sur cette page de test ? Une copie déjà présente dans cette base sera remplacée. Le fichier JSON original restera intact.");
+  if(!ok)return;
+  importButton.disabled=true;
+  try{
+    await KSBtpOfflineStorage.saveSnapshot(parsedData);
+    const check=await KSBtpOfflineStorage.readSnapshot();
+    if(!check)throw new Error("La vérification après enregistrement n'a pas retrouvé la copie.");
+    show("IMPORTATION RÉUSSIE.\nLa copie est enregistrée dans IndexedDB sur cette page de test.\nFichier original conservé : oui.\nMatériels : "+count(check,"materials")+
+      "\nChantiers : "+count(check,"sites")+
+      "\nMouvements : "+count(check,"movements")+
+      "\nBons : "+count(check,"documents")+
+      "\n\nTu peux retourner à la page de test et appuyer sur « Lire la copie préparée ».");
+  }catch(error){show("Importation impossible : "+error.message);importButton.disabled=false;}
+});
+</script></body></html>
