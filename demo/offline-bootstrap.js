@@ -45,6 +45,10 @@ if(localIsValid){
   // Restauration uniquement si la copie locale est absente ou illisible.
   localStorage.setItem(KEY,JSON.stringify(snapshot));
   status.textContent="Données récupérées depuis la sauvegarde locale IndexedDB.";
+}else if(storageReadError){
+  // Sans copie localStorage ni lecture IndexedDB fiable, ne pas créer une base vide.
+  status.textContent="Stockage local inaccessible. Aucune nouvelle base n'a été créée afin de protéger les données existantes. "+storageReadError.message;
+  throw storageReadError;
 }else if(localRaw&&localParseError){
   // Ne pas démarrer avec une base vide qui pourrait écraser la copie illisible.
   status.textContent="Données locales à récupérer : le format existant est illisible. Aucune donnée n'a été remplacée. Exportez ou restaurez une sauvegarde avant de continuer.";
@@ -63,9 +67,6 @@ if(localIsValid){
   }
 }
 
-if(storageReadError&&!localIsValid&&!snapshot){
-  status.textContent="Attention : impossible de lire la sauvegarde locale. "+storageReadError.message;
-}
 
 await import("./app.js");
 
