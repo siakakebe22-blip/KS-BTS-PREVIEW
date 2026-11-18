@@ -205,7 +205,19 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");
 $("#voucherForm").addEventListener("submit",submitVoucher);$("#closeVoucher").onclick=closeVoucher;$("#cancelVoucher").onclick=closeVoucher;
 $("#itemForm").addEventListener("submit",e=>{e.preventDefault();const old=db.materials.find(m=>m.id===$("#itemId").value);if(old&&Number($("#itemQuantity").value)!==Number(old.quantity)){alert("Pour modifier une quantité existante, utilisez un mouvement de stock afin de conserver la traçabilité.");$("#itemQuantity").value=old.quantity;return}const data={id:old?.id||id(),ref:old?.ref||nextMaterialRef(),name:$("#itemName").value.trim(),category:$("#itemCategory").value,type:$("#itemType").value,quantity:Number($("#itemQuantity").value),unit:$("#itemUnit").value.trim(),threshold:Number($("#itemThreshold").value)||0,location:$("#itemLocation").value};if(old)Object.assign(old,data);else db.materials.push(data);save();closeItem();render()});
 $("#closeDialog").onclick=closeItem;$("#cancelDialog").onclick=closeItem;$("#menuToggle").onclick=()=>$("#sidebar").classList.toggle("open");
-document.addEventListener("change",e=>{if(e.target.id==="restoreFile"&&e.target.files[0]){const reader=new FileReader();reader.onload=()=>{try{const value=JSON.parse(reader.result);if(!value||!Array.isArray(value.materials))throw Error();if(confirm("Remplacer les données locales par cette sauvegarde ?")){db={...initial,...value};save();render();alert("Sauvegarde restaurée.")}}catch{alert("Fichier de sauvegarde invalide.")}};reader.readAsText(e.target.files[0])}});
+function validateBackup(value){
+  if(!value||typeof value!=="object"||Array.isArray(value)||!Array.isArray(value.materials))return false;
+  for(const key of ["sites","movements","maintenance","documents"]){
+    if(value[key]!==undefined&&!Array.isArray(value[key]))return false;
+  }
+  if(value.materials.some(m=>!m||typeof m!=="object"||!m.id||typeof m.name!=="string"||!Number.isFinite(Number(m.quantity))||Number(m.quantity)<0))return false;
+  if((value.sites||[]).some(s=>!s||typeof s!=="object"||!s.id||typeof s.name!=="string"))return false;
+  if((value.movements||[]).some(m=>!m||typeof m!=="object"||!m.materialId||!Number.isFinite(Number(m.quantity))||Number(m.quantity)<=0))return false;
+  if((value.maintenance||[]).some(m=>!m||typeof m!=="object"))return false;
+  if((value.documents||[]).some(d=>!d||typeof d!=="object"))return false;
+  return true;
+}
+document.addEventListener("change",e=>{if(e.target.id==="restoreFile"&&e.target.files[0]){const reader=new FileReader();reader.onload=()=>{try{const value=JSON.parse(reader.result);if(!validateBackup(value))throw Error("Structure de sauvegarde invalide.");if(confirm("Remplacer les données locales par cette sauvegarde ?")){db={...initial,...value,sites:value.sites||[],movements:value.movements||[],maintenance:value.maintenance||[],documents:value.documents||[]};save();render();alert("Sauvegarde restaurée.")}}catch(error){alert("Fichier de sauvegarde invalide ou incomplet. Les données actuelles ont été conservées.")}};reader.readAsText(e.target.files[0])}});
 $("#todayLabel").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 // Enregistrement du service worker même si le démarrage différé a dépassé l'événement load.
 if("serviceWorker" in navigator && location.protocol!=="file:"){
