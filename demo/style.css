@@ -16,3 +16,31 @@
 .current-user{font-size:12px;color:var(--muted);font-weight:600}
 [hidden]{display:none!important}
 @media(max-width:700px){.login-card{padding:24px}.current-user{display:none}}
+
+ 
+/* Modernisation de la page chantiers */
+.site-toolbar{display:flex;align-items:center;gap:10px;margin:18px 0 15px;flex-wrap:wrap}
+.site-toolbar .search{min-width:240px}
+.site-count{margin-left:auto;color:var(--muted);font-size:12px;font-weight:700}
+.site-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.site-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.site-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.site-title-wrap{display:flex;align-items:center;gap:11px;min-width:0}
+.site-symbol{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:12px;background:#fff1e2;color:#a85b18;font-size:22px}
+.site-title-wrap h3{margin:0 0 5px;color:var(--navy);font-size:16px;overflow-wrap:anywhere}
+.site-title-wrap p{margin:0;color:var(--muted);font-size:12px}
+.site-card-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:13px;background:#f7f9fc;border:1px solid #edf0f4;border-radius:10px;margin-bottom:14px}
+.site-card-summary span{display:block;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.45px;margin-bottom:6px}
+.site-card-summary strong{display:block;color:var(--navy);font-size:13px;overflow-wrap:anywhere}
+.site-material-list{display:grid;gap:0}
+.site-material-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);font-size:12px}
+.site-material-row:last-child{border-bottom:0}
+.site-material-name{font-weight:700;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.site-material-name small{display:block;color:var(--muted);font-size:10px;font-weight:500;margin-top:3px}
+.site-material-row strong{text-align:right;white-space:nowrap;color:var(--navy);font-size:12px}
+.site-empty-stock{padding:18px 8px;text-align:center;color:var(--muted);font-size:12px}
+.site-card-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:13px;margin-top:8px}
+.site-caption{font-size:11px;color:var(--muted)}
+.site-stat-stock{font-size:clamp(15px,1.8vw,22px);line-height:1.35;overflow-wrap:anywhere}
+@media(max-width:900px){.site-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.site-toolbar{align-items:stretch}.site-toolbar .search{min-width:100%}.site-toolbar .select-filter{flex:1}.site-count{width:100%;margin:0}.site-card{padding:14px}.site-card-summary{grid-template-columns:1fr}.site-stat-stock{font-size:16px}}
