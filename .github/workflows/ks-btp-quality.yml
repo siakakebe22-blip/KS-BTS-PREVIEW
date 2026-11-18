@@ -1,0 +1,51 @@
+name: KS BTP — contrôles qualité
+on:
+  push:
+    branches: [main]
+    paths:
+      - "demo/**"
+      - ".github/workflows/ks-btp-quality.yml"
+  pull_request:
+    paths:
+      - "demo/**"
+      - ".github/workflows/ks-btp-quality.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Vérifier la syntaxe JavaScript
+        run: |
+          node --check demo/sw.js
+          node --check demo/offline-storage.js
+          node --input-type=module --check < demo/offline-bootstrap.js
+          node --input-type=module --check < demo/app.js
+      - name: Vérifier les ressources hors connexion
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const html = fs.readFileSync('demo/index.html', 'utf8');
+          const sw = fs.readFileSync('demo/sw.js', 'utf8');
+          const required = ['index.html', 'style.css', 'app.js', 'offline-storage.js', 'offline-bootstrap.js', 'manifest.webmanifest'];
+          for (const file of required) {
+            if (!fs.existsSync('demo/' + file)) throw new Error('Ressource absente : ' + file);
+            if (!sw.includes('./' + file)) throw new Error('Ressource non précachée : ' + file);
+          }
+          for (const file of ['style.css', 'manifest.webmanifest']) {
+            if (!html.includes(file)) throw new Error('Ressource non référencée dans index.html : ' + file);
+          }
+          JSON.parse(fs.readFileSync('demo/manifest.webmanifest', 'utf8'));
+          if (!html.includes('offline-storage.js') || !html.includes('offline-bootstrap.js')) {
+            throw new Error('Initialisation du stockage hors connexion absente.');
+          }
+          console.log('OK : syntaxe, ressources locales, précache et manifeste.');
+          NODE
