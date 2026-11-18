@@ -73,8 +73,8 @@ jobs:
           if (!html.includes('ESPACE DE TRAVAIL') || !html.includes('PARC ET CHANTIERS') || !html.includes('STOCK ET OPÉRATIONS') || !html.includes('SUIVI ET CONTRÔLE') || !html.includes('ADMINISTRATION')) {
             throw new Error('Menu principal non organisé en rubriques.');
           }
-          if (!app.includes('Matériels présents') || !app.includes('Référence(s)') || !app.includes('site-overview')) {
-            throw new Error('Contenu synthétique de la page chantiers absent.');
+          if (!app.includes('Matériels présents') || !app.includes('grouped=new Map()') || !app.includes('site-overview')) {
+            throw new Error('Contenu synthétique et regroupement des matériels absents.');
           }
           if (!app.includes('function sitesPage(el)') || !app.includes('Matériels présents') || !app.includes('site-overview') || !app.includes('siteStatusFilter') || !app.includes('siteSearch') || !app.includes('grouped=new Map()')) {
             throw new Error('Page chantiers structurée, regroupement des matériels ou filtres absents.');
