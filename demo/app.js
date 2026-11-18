@@ -264,6 +264,7 @@ function openVoucherForm(type){
 function closeVoucher(){ $("#voucherDialog").close() }
 function submitVoucher(e){
   e.preventDefault();
+  if(storageLoadError){alert(storageLoadError);return}
   const type=$("#voucherType").value,quantity=Number($("#voucherQuantity").value);
   if(!Number.isFinite(quantity)||quantity<=0){alert("Saisissez une quantité valide.");return}
   let m=null,purchase=null;
@@ -320,6 +321,7 @@ function openMaintenance(record){
 function closeMaintenance(){$("#maintenanceDialog").close()}
 function submitMaintenance(e){
  e.preventDefault();
+ if(storageLoadError){alert(storageLoadError);return}
  const material=db.materials.find(m=>m.id===$("#maintenanceMaterial").value),description=$("#maintenanceDescription").value.trim(),raw=$("#maintenanceCost").value,cost=Number(raw),dateValue=$("#maintenanceDate").value;
  if(!material){alert("Sélectionnez un matériel valide.");return}
  if(!description){alert("La description de l'intervention est obligatoire.");$("#maintenanceDescription").focus();return}
@@ -469,7 +471,7 @@ async function resetStaffPassword(uid){
 }
 
 function settingsPage(el){el.innerHTML=`<div class="welcome"><div><h2>Paramètres de l'application</h2><p>Personnalisez les informations de base de KS BTP.</p></div><button class="button primary" data-action="save-settings">Enregistrer</button></div><div class="panel settings-grid"><label>Nom de l'entreprise<input id="companySetting" value="${esc(db.company)}"></label><label>Devise<select id="currencySetting">${["GNF","CFA","EUR","USD"].map(c=>`<option ${db.currency===c?"selected":""}>${c}</option>`).join("")}</select></label><label>Seuil d'alerte par défaut<input id="thresholdSetting" type="number" min="0" value="${db.threshold}"></label><label>Langue de l'interface<select disabled><option>Français</option></select></label></div><div class="notice" style="margin-top:16px">Mode démonstration indépendant : les données sont sauvegardées sur cet appareil avec IndexedDB. Aucun compte ni serveur Firebase n’est utilisé.</div>`}
-function openItem(item){$("#itemForm").reset();$("#itemId").value=item?.id||"";$("#dialogTitle").textContent=item?"Modifier le matériel":"Ajouter un matériel";$("#itemName").value=item?.name||"";$("#itemCategory").value=item?.category||"Maçonnerie";$("#itemType").value=item?.type||"equipment";$("#itemQuantity").value=item?.quantity??0;$("#itemUnit").value=item?.unit||"pièce";$("#itemThreshold").value=item?.threshold??db.threshold;$("#itemLocation").innerHTML='<option value="central">Magasin central</option>'+db.sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");$("#itemLocation").value=item?.location||"central";$("#itemDialog").showModal()}
+function openItem(item){$("#itemForm").reset();$("#itemId").value=item?.id||"";$("#dialogTitle").textContent=item?"Modifier le matériel":"Ajouter un matériel";$("#itemName").value=item?.name||"";$("#itemCategory").value=item?.category||"Maçonnerie";$("#itemType").value=item?.type||"equipment";$("#itemQuantity").value=item?.quantity??0;$("#itemUnit").value=item?.unit||"pièce";$("#itemThreshold").value=item?.threshold??db.threshold;$("#itemLocation").innerHTML='<option value="central">Magasin central</option>'+db.sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");$("#itemLocation").value=item?.location||"central";$("#itemQuantity").readOnly=!!item;$("#itemLocation").disabled=!!item;$("#itemDialog").showModal()}
 function closeItem(){$("#itemDialog").close()}
 function addMovement(){
   $("#movementMaterial").innerHTML='<option value="">Choisir un matériel</option>'+db.materials.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.ref)+' — '+esc(m.name)+' ('+m.quantity+' '+esc(m.unit)+')</option>').join("");
@@ -490,6 +492,7 @@ function updateMovementForm(){
 function closeMovement(){ $("#movementDialog").close() }
 function submitMovement(e){
   e.preventDefault();
+  if(storageLoadError){alert(storageLoadError);return}
   const type=$("#movementType").value,m=db.materials.find(x=>x.id===$("#movementMaterial").value),qty=Number($("#movementQuantity").value),siteId=$("#movementSite").value;
   if(!m){alert("Choisissez un matériel dans la liste.");return}
   if(!Number.isFinite(qty)||qty<=0){alert("Saisissez une quantité strictement supérieure à zéro.");return}
@@ -515,7 +518,8 @@ function submitMovement(e){
 function exportCsv(){const rows=[["Référence","Désignation","Catégorie","Type","Quantité","Unité","Emplacement"],...db.materials.map(m=>[m.ref,m.name,m.category,m.type,m.quantity,m.unit,m.location])];const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\n");download("ks-btp-materiels.csv",csv,"text/csv;charset=utf-8")}
 function download(name,data,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 document.querySelectorAll(".nav-link[data-page]").forEach(nav=>{nav.addEventListener("click",e=>{e.preventDefault();go(nav.dataset.page)});});
-document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(!b)return;const act=b.dataset.action,mid=b.dataset.id;if(act==="add-material")openItem();if(act==="edit-material")openItem(db.materials.find(m=>m.id===mid));if(act==="delete-material"){
+document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(!b)return;const act=b.dataset.action,mid=b.dataset.id;
+ if(storageLoadError&&["add-material","edit-material","delete-material","add-site","delete-site","add-movement","open-voucher","add-maintenance","edit-maintenance","delete-maintenance","save-settings"].includes(act)){alert(storageLoadError);return}if(act==="add-material")openItem();if(act==="edit-material")openItem(db.materials.find(m=>m.id===mid));if(act==="delete-material"){
   const used=db.movements.some(x=>x.materialId===mid)||(db.documents||[]).some(x=>x.materialId===mid)||(db.purchases||[]).some(x=>x.materialId===mid)||db.maintenance.some(x=>x.materialId===mid||(!x.materialId&&x.materialName===db.materials.find(m=>m.id===mid)?.name));
   if(used){alert("Suppression impossible : ce matériel possède un historique. Conservez sa fiche pour préserver la traçabilité.");return}
   if(confirm("Supprimer ce matériel de l'inventaire ?")){const item=db.materials.find(m=>m.id===mid);logAction("Suppression","Matériel",(item?.ref||"")+" — "+(item?.name||"Matériel"),mid);db.materials=db.materials.filter(m=>m.id!==mid);save();render()}
