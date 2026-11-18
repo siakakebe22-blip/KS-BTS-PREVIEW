@@ -107,7 +107,7 @@ function openVoucherForm(type){
   $("#voucherQuantity").removeAttribute("max");
   const updateVoucherLimit=()=>{const material=db.materials.find(x=>x.id===$("#voucherMaterial").value);const site=$("#voucherSite").value;const limit=(type==="Sortie"||type==="Retour")&&material&&site?stockAt(material,site):"";$("#voucherQuantity").max=limit===""?"":String(limit)};
   $("#voucherMaterial").onchange=updateVoucherLimit;$("#voucherSite").onchange=updateVoucherLimit;updateVoucherLimit();
-  $("#voucherSiteLabel").textContent=type==="Sortie"?"Chantier destinataire":"Chantier d'origine";
+  $("#voucherSiteLabel").textContent=type==="Sortie"?"Chantier concerné / lieu de sortie":"Chantier d'origine";
   $("#purchaseDate").value=new Date().toISOString().slice(0,10);
   $("#purchaseUnitPrice").value="";
   $("#purchaseTotal").value="";
