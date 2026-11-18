@@ -120,7 +120,7 @@ jobs:
           };
           const engineSource = ['stockLocation','ensureStockBalances','stockAt','changeStock','applyStockChanges','stockByUnit','totalStock']
             .map(functionSource).join('\n');
-          const createEngine = new Function('db','id',engineSource + '\nreturn {stockAt,changeStock,stockByUnit,totalStock};');
+          const createEngine = new Function('db','id',engineSource + '\nreturn {stockAt,changeStock,applyStockChanges,stockByUnit,totalStock};');
           const testDb = {sites:[{id:'koloma-id',name:'Koloma'}],materials:[]};
           const engine = createEngine(testDb,()=> 'TEST-ID');
           const cement = {id:'cement',name:'Ciment test',unit:'Sacs',quantity:77,location:'Koloma'};
