@@ -61,7 +61,7 @@ jobs:
             throw new Error('Affichage dynamique du stock disponible dans le bon absent.');
           }
           if (!app.includes('home-voucher-dock') || !app.includes('data-type="Sortie"') || !app.includes('data-type="Réception"') || !app.includes('data-type="Retour"') || !css.includes('.home-voucher-dock{position:fixed') || !css.includes('prefers-reduced-motion:reduce')) { throw new Error('Actions flottantes des bons absentes.'); }
-          if (!app.includes('const purchaseRows=(db.purchases||[])') || !app.includes('esc(x.entity||"")') || !app.includes('esc(x.description||"")') || !app.includes('ACHATS ET RÉCEPTIONS') || !app.includes('Coût de l\'intervention (${esc(db.currency)})')) { throw new Error('Rapport général incomplet : achats ou journal des activités mal reliés.'); }
+          if (!app.includes('const purchaseRows=(db.purchases||[])') || !app.includes('esc(x.entity||"")') || !app.includes('esc(x.description||"")') || !app.includes('ACHATS ET RÉCEPTIONS') || !html.includes('id="maintenanceCurrency"') || !app.includes('$("#maintenanceCurrency").textContent=db.currency')) { throw new Error('Rapport général incomplet : achats ou journal des activités mal reliés.'); }
           if (!app.includes('function printGeneralReport()') || !app.includes('data-action="print-general-report"') || !app.includes('RAPPORT GÉNÉRAL DE GESTION') || !app.includes('SITUATION DES CHANTIERS') || !app.includes('BONS DE STOCK') || !app.includes('JOURNAL DES ACTIVITÉS')) {
             throw new Error('Téléchargement du rapport général PDF ou ses rubriques essentielles absent.');
           }
