@@ -214,3 +214,4 @@ if("serviceWorker" in navigator && location.protocol!=="file:"){
   });
 }
 go("dashboard");
+export {go};
