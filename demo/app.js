@@ -21,8 +21,14 @@ function save(){
 }
 function nextVoucherRef(type){
   const prefix="BON-"+String(type||"").toUpperCase().slice(0,3);
+  const pattern=new RegExp("^"+prefix+"-(\\d+)$");
   const max=(db.documents||[]).reduce((n,d)=>{
-    const match=new RegExp("^"+prefix.replace(/[.*+?^${}()|[\]\\]/g,"\\function nextMaterialRef(){")+"-(\\d+)$").exec(String(d.ref||""));
+    const match=pattern.exec(String(d.ref||""));
+    return match?Math.max(n,Number(match[1])):n;
+  },0);
+  return prefix+"-"+String(max+1).padStart(4,"0");
+}
+function nextMaterialRef(){")+"-(\\d+)$").exec(String(d.ref||""));
     return match?Math.max(n,Number(match[1])):n;
   },0);
   return prefix+"-"+String(max+1).padStart(4,"0");
