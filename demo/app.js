@@ -245,15 +245,20 @@ function stockAudit(){
   const locationRows=[],invalidBalances=[];
   const materials=db.materials.map(m=>{
     const current=Number(m.quantity)||0;
-    const balances=ensureStockBalances(m);
+    const rawBalances=Array.isArray(m.stockBalances)?m.stockBalances:[];
+    const auditCopy={...m,stockBalances:rawBalances.map(b=>({...b}))};
+    const balances=ensureStockBalances(auditCopy);
     const balanceTotal=balances.reduce((sum,b)=>sum+(Number.isFinite(Number(b.quantity))?Number(b.quantity):0),0);
     const seen=new Set();
-    balances.forEach(b=>{
+    rawBalances.forEach(b=>{
       const q=Number(b.quantity),key=String(b.locationId||"");
       if(!Number.isFinite(q)||q<0)invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:b.quantity});
       if(seen.has(key))invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:"Emplacement en double"});
       seen.add(key);
       if(key!=="__unallocated__"&&key!=="central"&&!knownSites.has(key))invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:"Chantier introuvable"});
+    });
+    balances.forEach(b=>{
+      const q=Number(b.quantity),key=String(b.locationId||"");
       if(q>0)locationRows.push({ref:m.ref,name:m.name,unit:m.unit,location:b.locationName||(key==="central"?"Magasin central":knownSites.get(key)||"Emplacement non identifié"),quantity:q});
     });
     return {id:m.id,ref:m.ref,name:m.name,unit:m.unit,current,balanceTotal,difference:Number((current-balanceTotal).toFixed(4)),hasBalances:true};
