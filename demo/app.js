@@ -119,27 +119,33 @@ function sitesPage(el){
   const centralItems=db.materials.map(m=>({quantity:stockAt(m,"central"),unit:m.unit})).filter(x=>x.quantity>0);
   const siteItems=db.sites.flatMap(site=>db.materials.map(m=>({quantity:stockAt(m,site.id),unit:m.unit})).filter(x=>x.quantity>0));
   const unallocatedItems=db.materials.map(m=>({quantity:unallocatedStock(m),unit:m.unit})).filter(x=>x.quantity>0);
-  const active=db.sites.filter(s=>s.status!=="Clôturé").length,closed=db.sites.length-active;
+  const active=db.sites.filter(s=>s.status!=="Clôturé").length;
   const cards=db.sites.map(site=>{
-    const lines=db.materials.map(m=>({m,q:stockAt(m,site.id)})).filter(x=>x.q>0);
-    const stockByUnit=summarize(lines.map(x=>({quantity:x.q,unit:x.m.unit})));
-    const details=lines.length?lines.map(({m,q})=>'<div class="site-material-row"><span class="site-material-name">'+esc(m.name)+'<small>'+esc(m.ref||"Sans référence")+'</small></span><strong>'+q.toLocaleString("fr-FR")+' '+esc(m.unit||"unité")+'</strong></div>').join(""):'<div class="site-empty-stock">Aucun matériel enregistré sur ce chantier</div>';
+    const grouped=new Map();
+    db.materials.forEach(m=>{
+      const quantity=stockAt(m,site.id);
+      if(quantity<=0)return;
+      const key=String(m.name||"").trim().toLocaleLowerCase("fr")+"|"+String(m.unit||"unité").trim().toLocaleLowerCase("fr");
+      if(!grouped.has(key))grouped.set(key,{name:m.name,unit:m.unit||"unité",quantity:0,refs:[]});
+      const item=grouped.get(key);item.quantity+=quantity;if(m.ref)item.refs.push(m.ref);
+    });
+    const lines=[...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,"fr"));
+    const details=lines.length?lines.map(item=>'<div class="site-material-row"><span class="site-material-name">'+esc(item.name)+'<small>'+item.refs.length+' référence(s) : '+esc(item.refs.join(" · "))+'</small></span><strong>'+Number(item.quantity.toFixed(3)).toLocaleString("fr-FR")+' '+esc(item.unit)+'</strong></div>').join(""):'<div class="site-empty-stock">Aucun matériel affecté à ce chantier</div>';
     const status=site.status||"Actif";
-    return '<article class="site-card"><div class="site-card-head"><div class="site-title-wrap"><span class="site-symbol">⌂</span><div><h3>'+esc(site.name)+'</h3><p>'+esc(site.manager||"Responsable non renseigné")+'</p></div></div><span class="tag '+(status==="Clôturé"?"":"good")+'">'+esc(status)+'</span></div><div class="site-card-summary"><div><span>Stock par unité</span><strong>'+esc(stockByUnit)+'</strong></div><div><span>Matériels présents</span><strong>'+lines.length+'</strong></div></div><div class="site-material-list">'+details+'</div><div class="site-card-actions"><span class="site-caption">'+lines.length+' référence(s) en stock</span><button class="small-button danger" data-action="delete-site" data-id="'+esc(site.id)+'">Supprimer</button></div></article>';
+    return '<article class="site-card"><div class="site-card-head"><div class="site-title-wrap"><span class="site-symbol">⌂</span><div><h3>'+esc(site.name)+'</h3><p>Responsable : '+esc(site.manager||"Non renseigné")+'</p></div></div><span class="tag '+(status==="Clôturé"?"":"good")+'">'+esc(status)+'</span></div><div class="site-section-title">Matériels présents <span>'+lines.length+' désignation(s)</span></div><div class="site-material-list">'+details+'</div><div class="site-card-actions"><span class="site-caption">Suivi du stock par matériel</span><button class="small-button danger" data-action="delete-site" data-id="'+esc(site.id)+'">Supprimer le chantier</button></div></article>';
   }).join("");
-  el.innerHTML='<div class="welcome"><div><h2>Suivi des chantiers</h2><p>Visualisez les stocks, les responsables et l’état de chaque site de travaux.</p></div><button class="button primary" data-action="add-site">＋ Ajouter un chantier</button></div>'+
-  '<div class="stats-grid site-stats"><article class="stat-card"><div class="stat-label">Chantiers actifs</div><div class="stat-value">'+active+'</div><div class="stat-note">'+closed+' chantier(s) clôturé(s)</div></article><article class="stat-card"><div class="stat-label">Stock sur les chantiers</div><div class="stat-value site-stat-stock">'+esc(summarize(siteItems))+'</div><div class="stat-note">Quantités séparées par unité</div></article><article class="stat-card"><div class="stat-label">Magasin central</div><div class="stat-value site-stat-stock">'+esc(summarize(centralItems))+'</div><div class="stat-note">Stock disponible au dépôt</div></article><article class="stat-card"><div class="stat-label">Stock historique à répartir</div><div class="stat-value site-stat-stock">'+esc(summarize(unallocatedItems))+'</div><div class="stat-note">Non affecté à un emplacement</div></article></div>'+
-  '<div class="notice">Les quantités sont regroupées par matériel et par unité. Le stock historique non ventilé reste séparé : aucune quantité n’est déplacée ou attribuée automatiquement.</div>'+
+  el.innerHTML='<div class="sites-heading"><div><p class="eyebrow">PARC ET EMPLACEMENTS</p><h2>Gestion des chantiers</h2><p>Consultez les responsables et les matériels affectés à chaque chantier.</p></div><button class="button primary" data-action="add-site">＋ Nouveau chantier</button></div>'+
+  '<section class="site-overview" aria-label="Synthèse des stocks"><div class="site-overview-item"><span>Chantiers actifs</span><strong>'+active+' <small>/ '+db.sites.length+'</small></strong></div><div class="site-overview-item"><span>Stock sur les chantiers</span><strong>'+esc(summarize(siteItems))+'</strong></div><div class="site-overview-item"><span>Magasin central</span><strong>'+esc(summarize(centralItems))+'</strong></div></section>'+
+  (unallocatedItems.length?'<div class="notice">Stock historique non affecté : '+esc(summarize(unallocatedItems))+'. Il reste séparé et ne sera attribué à aucun chantier automatiquement.</div>':'')+
   '<div class="site-toolbar"><input class="search" id="siteSearch" type="search" placeholder="Rechercher un chantier ou un responsable…" aria-label="Rechercher un chantier ou un responsable"><select class="select-filter" id="siteStatusFilter" aria-label="Filtrer par statut"><option value="">Tous les statuts</option><option value="Actif">Actifs</option><option value="Clôturé">Clôturés</option></select><span class="site-count">'+db.sites.length+' chantier(s)</span></div>'+
-  '<div class="site-grid" id="siteGrid">'+(cards||'<div class="panel empty-state">Aucun chantier enregistré. Ajoutez votre premier chantier pour commencer le suivi.</div>')+'</div>';
+  '<div class="site-grid" id="siteGrid">'+(cards||'<div class="site-empty panel">Aucun chantier enregistré. Créez un chantier pour commencer le suivi.</div>')+'</div>';
   const search=$("#siteSearch"),filter=$("#siteStatusFilter"),grid=$("#siteGrid");
   const applyFilters=()=>{
-    const query=(search.value||"").trim().toLocaleLowerCase("fr"),status=filter.value;
-    let visible=0;
+    const query=(search.value||"").trim().toLocaleLowerCase("fr"),status=filter.value;let visible=0;
     grid.querySelectorAll(".site-card").forEach(card=>{const show=card.dataset.search.includes(query)&&(!status||card.dataset.status===status);card.hidden=!show;if(show)visible++;});
-    const count=el.querySelector(".site-count");if(count)count.textContent=visible+" chantier(s) affiché(s)";
+    const count=el.querySelector(".site-count");if(count)count.textContent=visible+" chantier(s)";
     let empty=grid.querySelector(".site-filter-empty");
-    if(!visible&&cards){if(!empty){empty=document.createElement("div");empty.className="panel empty-state site-filter-empty";empty.textContent="Aucun chantier ne correspond à votre recherche.";grid.append(empty);}empty.hidden=false;}else if(empty)empty.hidden=true;
+    if(!visible&&cards){if(!empty){empty=document.createElement("div");empty.className="site-empty panel site-filter-empty";empty.textContent="Aucun chantier ne correspond à votre recherche.";grid.append(empty);}empty.hidden=false;}else if(empty)empty.hidden=true;
   };
   grid.querySelectorAll(".site-card").forEach((card,index)=>{const site=db.sites[index];card.dataset.search=(String(site.name||"")+" "+String(site.manager||"")).toLocaleLowerCase("fr");card.dataset.status=site.status||"Actif";});
   search.addEventListener("input",applyFilters);filter.addEventListener("change",applyFilters);
