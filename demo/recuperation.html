@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a">
+<title>KS BTP — Diagnostic et récupération</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172338;background:#f3f6fa}*{box-sizing:border-box}body{margin:0;padding:18px}.wrap{max-width:850px;margin:auto}.head,.panel{background:#fff;border:1px solid #dce3ec;border-radius:14px;padding:18px;margin:0 0 14px}.head{background:#14243a;color:#fff}.head h1{font-size:22px;margin:0 0 8px}.head p{margin:0;color:#d8e1ee;line-height:1.5}.warn{border-left:4px solid #d97706;background:#fff8e8;padding:12px;margin-top:14px;color:#68420b}.panel h2{font-size:18px;margin:0 0 10px}.muted{color:#5e6c80;font-size:14px;line-height:1.5}.item{border-top:1px solid #e5eaf0;padding:12px 0;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}.item:first-of-type{border-top:0}.count{font-size:13px;color:#526176}.btn{border:0;border-radius:9px;padding:11px 14px;background:#e8edf5;color:#14243a;font-weight:650;font-size:14px}.primary{background:#f28c28;color:#172338}.btn:disabled{opacity:.45}.status{padding:10px;background:#eef3f8;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}.actions{display:flex;gap:8px;flex-wrap:wrap}a{color:#9bc8ff}
+</style>
+</head>
+<body><main class="wrap">
+<header class="head"><h1>KS BTP — Diagnostic et récupération</h1><p>Outil de lecture seule pour rechercher les anciennes données sur cet appareil. Il ne modifie, ne supprime et ne réinitialise aucun stockage.</p><div class="warn"><strong>Important :</strong> ne crée pas de nouvelles données et ne restaure aucun fichier pour le moment. Télécharge d'abord toute sauvegarde retrouvée.</div></header>
+<section class="panel"><h2>Analyse du stockage local</h2><p class="muted">L'analyse examine les clés locales et les bases IndexedDB accessibles depuis ce site. Les données ne quittent pas ton téléphone : seul un fichier est téléchargé si tu appuies sur un bouton d'export.</p><div id="status" class="status">Analyse en cours…</div><div id="results"></div><div class="actions" style="margin-top:12px"><button id="scan" class="btn primary">Relancer l'analyse</button><a href="./" style="align-self:center">Retour à KS BTP</a></div></section>
+<section class="panel"><h2>Si aucune donnée n'est retrouvée</h2><p class="muted">Ne désinstalle pas Chrome et ne supprime pas les données du site. Une sauvegarde JSON téléchargée précédemment peut aussi permettre une restauration. Si l'analyse ne trouve rien, il faudra vérifier les autres profils Chrome ou appareils utilisés auparavant.</p></section>
+</main>
+<script>
+(()=>{"use strict";
+const $=s=>document.querySelector(s), status=$("#status"), results=$("#results");
+const arrayKeys=["materials","sites","movements","maintenance","documents","purchases"];
+function counts(data){const out={};for(const k of arrayKeys)if(Array.isArray(data?.[k]))out[k]=data[k].length;return out}
+function isCandidate(v){return !!v&&typeof v==="object"&&!Array.isArray(v)&&arrayKeys.some(k=>Array.isArray(v[k]))}
+function labelCounts(c){return Object.entries(c).map(([k,v])=>k+" : "+v).join(" · ")||"Aucun tableau de données détecté"}
+function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+async function scan(){
+ results.replaceChildren();status.textContent="Lecture des clés locales…";
+ const found=[];let localKeys=0;
+ try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);localKeys++;const raw=localStorage.getItem(key);try{const value=JSON.parse(raw);if(isCandidate(value))found.push({source:"localStorage · "+key,data:value})}catch(_){}}}catch(e){status.textContent="Lecture localStorage impossible : "+e.message}
+ status.textContent="Clés locales examinées : "+localKeys+". Recherche des bases IndexedDB…";
+ let dbs=[];
+ try{if(indexedDB.databases)dbs=await indexedDB.databases();else status.textContent+="\nCe navigateur ne permet pas d'énumérer les bases IndexedDB."}catch(e){status.textContent+="\nÉnumération IndexedDB impossible : "+e.message}
+ for(const info of dbs){
+  if(!info.name)continue;
+  try{
+   const db=await new Promise((resolve,reject)=>{const req=indexedDB.open(info.name);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
+   const stores=[...db.objectStoreNames];
+   for(const store of stores){
+    try{
+     const rows=await new Promise((resolve,reject)=>{const tx=db.transaction(store,"readonly");const req=tx.objectStore(store).getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)});
+     rows.forEach((row,index)=>{const candidate=row?.data&&isCandidate(row.data)?row.data:isCandidate(row)?row:null;if(candidate)found.push({source:"IndexedDB · "+info.name+" / "+store+" / entrée "+index,data:candidate})});
+    }catch(e){status.textContent+="\nLecture partielle "+info.name+"/"+store+" : "+e.message}
+   }
+   db.close();
+  }catch(e){status.textContent+="\nBase inaccessible "+info.name+" : "+e.message}
+ }
+ status.textContent+="\nAnalyse terminée. "+found.length+" copie(s) contenant des tableaux de données détectée(s).";
+ if(!found.length){results.innerHTML='<p class="muted">Aucune copie exploitable détectée dans les stockages accessibles depuis cette adresse.</p>';return}
+ found.forEach((item,index)=>{
+  const c=counts(item.data),row=document.createElement("div");row.className="item";
+  const info=document.createElement("div"),title=document.createElement("strong"),detail=document.createElement("div"),button=document.createElement("button");
+  title.textContent=item.source;detail.className="count";detail.textContent=labelCounts(c);info.append(title,detail);
+  button.className="btn primary";button.textContent="Télécharger cette copie";button.addEventListener("click",()=>download("KS-BTP-recuperation-"+(index+1)+".json",item.data));
+  row.append(info,button);results.append(row);
+ });
+}
+$("#scan").addEventListener("click",scan);scan();
+})();
+</script></body></html>
