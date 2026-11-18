@@ -28,11 +28,6 @@ function nextVoucherRef(type){
   },0);
   return prefix+"-"+String(max+1).padStart(4,"0");
 }
-function nextMaterialRef(){")+"-(\\d+)$").exec(String(d.ref||""));
-    return match?Math.max(n,Number(match[1])):n;
-  },0);
-  return prefix+"-"+String(max+1).padStart(4,"0");
-}
 function nextMaterialRef(){
   const max=db.materials.reduce((n,m)=>{const match=/^MAT-(\d+)$/.exec(String(m.ref||""));return match?Math.max(n,Number(match[1])):n},0);
   return "MAT-"+String(max+1).padStart(4,"0");
