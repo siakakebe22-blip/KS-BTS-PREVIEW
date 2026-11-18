@@ -36,8 +36,33 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function money(v){return new Intl.NumberFormat("fr-FR",{maximumFractionDigits:2}).format(Number(v)||0)+" "+db.currency}
 function date(v){return new Date(v).toLocaleDateString("fr-FR")}
 function id(){return "K"+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase()}
-function stockAt(item,location){return (Number(item.quantity)||0)}
+function stockLocation(value){
+  if(!value||value==="central"||value==="Magasin central")return {id:"central",name:"Magasin central"};
+  const site=db.sites.find(x=>x.id===value||x.name===value);
+  return site?{id:site.id,name:site.name}:{id:"__unallocated__",name:"Stock historique à répartir"};
+}
+function ensureStockBalances(item){
+  if(Array.isArray(item.stockBalances))return item.stockBalances;
+  const loc=stockLocation(item.location);
+  item.stockBalances=[{locationId:loc.id,locationName:loc.name,quantity:Math.max(0,Number(item.quantity)||0)}];
+  return item.stockBalances;
+}
+function stockAt(item,location){
+  const loc=stockLocation(location);
+  return ensureStockBalances(item).filter(x=>x.locationId===loc.id).reduce((n,x)=>n+Math.max(0,Number(x.quantity)||0),0);
+}
+function changeStock(item,location,delta){
+  const loc=stockLocation(location),balances=ensureStockBalances(item);
+  let entry=balances.find(x=>x.locationId===loc.id);
+  if(!entry){entry={locationId:loc.id,locationName:loc.name,quantity:0};balances.push(entry)}
+  const next=Number(entry.quantity||0)+Number(delta);
+  if(!Number.isFinite(next)||next<-.000001)return false;
+  entry.quantity=Math.max(0,Number(next.toFixed(4)));
+  item.quantity=Number(balances.reduce((n,x)=>n+Number(x.quantity||0),0).toFixed(4));
+  return true;
+}
 function totalStock(){return db.materials.reduce((s,m)=>s+Number(m.quantity||0),0)}
+function unallocatedStock(item){return stockAt(item,"__unallocated__")}
 function go(page){currentPage=page;document.querySelectorAll(".nav-link").forEach(b=>b.classList.toggle("active",b.dataset.page===page));$("#pageTitle").textContent=({dashboard:"Tableau de bord",materials:"Gestion des matériels",sites:"Gestion des chantiers",movements:"Mouvements de stock",maintenance:"Maintenance",reports:"Rapports",settings:"Paramètres",documents:"Bons de stock",users:"Gestion des utilisateurs"})[page];render();$("#sidebar").classList.remove("open")}
 function render(){const target=$("#pageContent");({dashboard:dashboard,materials:materialsPage,sites:sitesPage,movements:movementsPage,documents:documentsPage,maintenance:maintenancePage,reports:reportsPage,settings:settingsPage,users:usersPage}[currentPage]||dashboard)(target)}
 function dashboard(el){const low=db.materials.filter(m=>Number(m.quantity)<=Number(m.threshold||db.threshold));el.innerHTML=`<div class="welcome"><div><h2>Bienvenue dans KS BTP</h2><p>Suivez vos matériels du magasin central jusqu'aux chantiers.</p></div><div class="quick-actions"><button class="button primary" data-action="add-material">＋ Nouveau matériel</button><button class="button secondary" data-action="open-voucher" data-type="Sortie">Bon de sortie</button><button class="button secondary" data-action="open-voucher" data-type="Réception">Bon de réception</button><button class="button secondary" data-action="open-voucher" data-type="Retour">Bon de retour</button></div></div><div class="stats-grid"><article class="stat-card"><div class="stat-label">Matériels référencés</div><div class="stat-value">${db.materials.length}</div><div class="stat-note">Articles dans l'inventaire</div></article><article class="stat-card"><div class="stat-label">Stock total</div><div class="stat-value">${totalStock().toLocaleString("fr-FR")}</div><div class="stat-note">Quantités enregistrées</div></article><article class="stat-card"><div class="stat-label">Chantiers actifs</div><div class="stat-value">${db.sites.filter(s=>s.status!=="Clôturé").length}</div><div class="stat-note">Sites suivis</div></article><article class="stat-card"><div class="stat-label">Alertes de stock</div><div class="stat-value">${low.length}</div><div class="stat-note">Sous le seuil minimum</div></article></div><div class="panel-grid"><section class="panel"><div class="panel-head"><h3>Alertes de stock</h3><span class="tag ${low.length?"low":"good"}">${low.length} alerte(s)</span></div>${low.length?low.slice(0,6).map(m=>`<div class="list-row"><div><strong>${esc(m.name)}</strong><span class="muted">${esc(m.category)} · Seuil : ${m.threshold}</span></div><span class="tag low">${m.quantity} ${esc(m.unit)}</span></div>`).join(""):'<div class="empty-state">Aucune alerte de stock pour le moment.</div>'}</section><section class="panel"><h3>Derniers mouvements</h3>${db.movements.slice(-5).reverse().map(m=>`<div class="list-row"><div><strong>${esc(m.type)} · ${esc(m.materialName)}</strong><span class="muted">${esc(m.location)} · ${date(m.date)}</span></div><span class="kpi">${m.quantity}</span></div>`).join("")||'<div class="empty-state">Aucun mouvement enregistré.</div>'}</section></div>`}
@@ -57,7 +82,8 @@ function openVoucherForm(type){
   $("#standardVoucherExtra").hidden=isReceipt;
   $("#voucherExistingMaterial").innerHTML='<option value="">＋ Nouveau matériel à enregistrer</option>'+db.materials.map(m=>`<option value="${m.id}">${esc(m.ref)} — ${esc(m.name)} (stock : ${m.quantity} ${esc(m.unit)})</option>`).join("");
   $("#voucherMaterial").innerHTML=db.materials.map(m=>`<option value="${m.id}">${esc(m.ref)} — ${esc(m.name)} (stock : ${m.quantity} ${esc(m.unit)})</option>`).join("");
-  $("#voucherSite").innerHTML='<option value="Magasin central">Magasin central</option>'+db.sites.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("");
+  $("#voucherSite").innerHTML=db.sites.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+  $("#receiptLocation").innerHTML='<option value="central">Magasin central</option>'+db.sites.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
   $("#voucherQuantity").value=1;
   $("#voucherQuantity").max=type==="Sortie"?Number(db.materials[0]?.quantity||0):"";
   $("#voucherSiteLabel").textContent=type==="Sortie"?"Chantier destinataire":"Chantier d'origine";
@@ -95,18 +121,30 @@ function submitVoucher(e){
     }
     const unitPrice=Number($("#purchaseUnitPrice").value||0);
     purchase={id:id(),date:$("#purchaseDate").value||new Date().toISOString().slice(0,10),supplier:$("#purchaseSupplier").value.trim(),invoice:$("#purchaseInvoice").value.trim(),quantity,unitPrice,total:quantity*unitPrice,currency:db.currency,storage:$("#receiptLocation").value};
-    m.quantity=Number(m.quantity||0)+quantity;
-    m.location="central";
+    const storage=$("#receiptLocation").value||"central";
+    changeStock(m,storage,quantity);
+    m.location=storage;
     m.purchaseHistory=m.purchaseHistory||[];m.purchaseHistory.push(purchase);
     db.purchases=db.purchases||[];db.purchases.push({...purchase,materialId:m.id,materialName:m.name,materialRef:m.ref,category:m.category});
   }else{
     m=db.materials.find(x=>x.id===$("#voucherMaterial").value);
     if(!m){alert("Choisissez un matériel.");return}
-    if(type==="Sortie"&&quantity>Number(m.quantity)){alert("Stock insuffisant : bon non créé.");return}
-    if(type==="Sortie")m.quantity=Number(m.quantity)-quantity;else m.quantity=Number(m.quantity)+quantity;
+    const selectedSite=$("#voucherSite").value;
+    if(!selectedSite||!db.sites.some(x=>x.id===selectedSite)){alert("Créez ou choisissez un chantier valide.");return}
+    if(type==="Sortie"){
+      const available=stockAt(m,"central")+unallocatedStock(m);
+      if(quantity>available){alert("Stock insuffisant au magasin central et dans le stock historique non réparti.");return}
+      let remaining=quantity;const takeCentral=Math.min(stockAt(m,"central"),remaining);
+      if(takeCentral){changeStock(m,"central",-takeCentral);remaining-=takeCentral}
+      if(remaining>0)changeStock(m,"__unallocated__",-remaining);
+      changeStock(m,selectedSite,quantity);
+    }else{
+      if(quantity>stockAt(m,selectedSite)){alert("Stock insuffisant sur ce chantier pour effectuer le retour.");return}
+      changeStock(m,selectedSite,-quantity);changeStock(m,"central",quantity);
+    }
   }
   db.documents=db.documents||[];
-  const d={id:id(),ref:nextVoucherRef(type),date:new Date().toISOString(),type,materialId:m.id,materialRef:m.ref,materialName:m.name,category:m.category,quantity,unit:m.unit,site:type==="Réception"?$("#receiptLocation").value:$("#voucherSite").value,recipient:$("#voucherRecipient").value.trim(),note:$("#voucherNote").value.trim(),purchase};
+  const d={id:id(),ref:nextVoucherRef(type),date:new Date().toISOString(),type,materialId:m.id,materialRef:m.ref,materialName:m.name,category:m.category,quantity,unit:m.unit,site:type==="Réception"?$("#receiptLocation").selectedOptions[0]?.textContent:$("#voucherSite").selectedOptions[0]?.textContent,recipient:$("#voucherRecipient").value.trim(),note:$("#voucherNote").value.trim(),purchase};
   if(type==="Réception"){d.supplier=purchase.supplier;d.invoice=purchase.invoice;d.purchaseDate=purchase.date;d.unitPrice=purchase.unitPrice;d.totalPurchase=purchase.total}
   db.documents.push(d);
   db.movements.push({id:id(),date:d.date,type:type.toLowerCase(),materialId:m.id,materialName:m.name,quantity,location:d.site,note:"Document "+d.ref+(purchase?" · Fournisseur : "+purchase.supplier:"")});
