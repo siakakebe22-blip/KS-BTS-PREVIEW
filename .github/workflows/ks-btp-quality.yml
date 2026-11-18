@@ -114,13 +114,13 @@ jobs:
           const functionSource = name => {
             const start = app.indexOf('function ' + name + '(');
             if (start < 0) throw new Error('Fonction de calcul absente : ' + name);
-            let end = app.indexOf('\\nfunction ', start + 10);
+            let end = app.indexOf('\nfunction ', start + 10);
             if (end < 0) end = app.length;
             return app.slice(start, end);
           };
           const engineSource = ['stockLocation','ensureStockBalances','stockAt','changeStock','stockByUnit','totalStock']
-            .map(functionSource).join('\\n');
-          const createEngine = new Function('db','id',engineSource + '\\nreturn {stockAt,changeStock,stockByUnit,totalStock};');
+            .map(functionSource).join('\n');
+          const createEngine = new Function('db','id',engineSource + '\nreturn {stockAt,changeStock,stockByUnit,totalStock};');
           const testDb = {sites:[{id:'koloma-id',name:'Koloma'}],materials:[]};
           const engine = createEngine(testDb,()=> 'TEST-ID');
           const cement = {id:'cement',name:'Ciment test',unit:'Sacs',quantity:77,location:'Koloma'};
