@@ -6,7 +6,7 @@
 (() => {
   "use strict";
   const DB_NAME="ks_btp_safe_store";
-  const DB_VERSION=1;
+  const DB_VERSION=2;
   const STORE="snapshots";
   const HISTORY="history";
   const LEGACY_DB_NAME="ks_btp_demo_offline";
@@ -25,7 +25,7 @@
         if(!database.objectStoreNames.contains(STORE))database.createObjectStore(STORE,{keyPath:"id"});
         if(!database.objectStoreNames.contains(HISTORY))database.createObjectStore(HISTORY,{keyPath:"id"});
       };
-      request.onsuccess=()=>resolve(request.result);
+      request.onsuccess=()=>{\n        const database=request.result;\n        database.onversionchange=()=>database.close();\n        resolve(database);\n      };
       request.onerror=()=>reject(request.error||new Error("Ouverture IndexedDB impossible."));
       request.onblocked=()=>reject(new Error("La base locale est bloquée par un autre onglet KS BTP."));
     }).catch(error=>{dbPromise=null;throw error;});
