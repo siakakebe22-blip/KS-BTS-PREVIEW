@@ -41,7 +41,7 @@ jobs:
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
           }
-          if (!sw.includes('ks-btp-demo-offline-v23') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+          if (!sw.includes('ks-btp-demo-offline-v24') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
             throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
           }
           if (!bootstrap.includes('await import("./app.js")')) {
