@@ -101,6 +101,21 @@ function changeStock(item,location,delta){
   return true;
 }
 
+function applyStockChanges(item,changes){
+  // Applique une opération multi-emplacements sur une copie : aucun débit partiel
+  // n'est conservé si l'un des crédits/débits échoue.
+  const working={...item};
+  if(Array.isArray(item.stockBalances))working.stockBalances=item.stockBalances.map(balance=>({...balance}));
+  else delete working.stockBalances;
+  for(const [location,delta] of changes){
+    if(Number(delta)===0)continue;
+    if(!changeStock(working,location,delta))return false;
+  }
+  item.stockBalances=working.stockBalances;
+  item.quantity=working.quantity;
+  return true;
+}
+
 function logAction(action,entity,description,entityId=""){
  db.activityLog=Array.isArray(db.activityLog)?db.activityLog:[];
  db.activityLog.push({id:id(),date:new Date().toISOString(),action,entity,entityId:String(entityId||""),description:String(description||"")});
@@ -247,10 +262,10 @@ function submitVoucher(e){
     if(type==="Sortie"){
       const available=stockAt(m,selectedSite);
       if(quantity>available){alert("Stock insuffisant sur le chantier sélectionné. Disponible : "+available+" "+m.unit+".");return}
-      if(!changeStock(m,selectedSite,-quantity)){alert("Impossible de débiter le stock du chantier.");return}
+      if(!applyStockChanges(m,[[selectedSite,-quantity]])){alert("Impossible de débiter le stock du chantier. Vérifiez sa ventilation.");return}
     }else{
       if(quantity>stockAt(m,selectedSite)){alert("Stock insuffisant sur ce chantier pour effectuer le retour.");return}
-      if(!changeStock(m,selectedSite,-quantity)||!changeStock(m,"central",quantity)){alert("Retour impossible : vérifiez les stocks avant de recommencer.");return}
+      if(!applyStockChanges(m,[[selectedSite,-quantity],["central",quantity]])){alert("Retour impossible : vérifiez les stocks et leur ventilation avant de recommencer.");return}
     }
   }
   db.documents=db.documents||[];
@@ -433,16 +448,15 @@ function submitMovement(e){
   if(type==="sortie"){
     if(!db.sites.some(s=>s.id===siteId)){alert("Choisissez le chantier destinataire.");return}
     const available=stockAt(m,"central")+unallocatedStock(m);if(qty>available){alert("Stock insuffisant au magasin central. Disponible : "+available+" "+m.unit+".");return}
-    let remain=qty,take=Math.min(stockAt(m,"central"),qty);if(take&&!changeStock(m,"central",-take)){alert("Impossible de débiter le magasin central.");return}remain-=take;
-    if(remain&&!changeStock(m,"__unallocated__",-remain)){alert("Impossible de débiter le stock historique.");return}
-    if(!changeStock(m,siteId,qty)){alert("Impossible d\'ajouter le matériel au chantier.");return}
+    const take=Math.min(stockAt(m,"central"),qty),remain=qty-take;
+    if(!applyStockChanges(m,[["central",-take],["__unallocated__",-remain],[siteId,qty]])){alert("Transfert impossible : vérifiez les stocks et leur ventilation avant de recommencer.");return}
     location=db.sites.find(s=>s.id===siteId).name;destination=siteId;
   }else if(type==="retour"||type==="consommation"){
     if(!db.sites.some(s=>s.id===siteId)){alert("Choisissez le chantier concerné.");return}
     const available=stockAt(m,siteId);if(qty>available){alert("Stock insuffisant sur ce chantier. Disponible : "+available+" "+m.unit+".");return}
-    if(!changeStock(m,siteId,-qty)){alert("Impossible de débiter le stock du chantier.");return}
+    const changes=type==="retour"?[[siteId,-qty],["central",qty]]:[[siteId,-qty]];
+    if(!applyStockChanges(m,changes)){alert("Opération impossible : vérifiez les stocks et leur ventilation avant de recommencer.");return}
     location=db.sites.find(s=>s.id===siteId).name;source=siteId;
-    if(type==="retour"&&!changeStock(m,"central",qty)){alert("Impossible d\'enregistrer le retour au magasin central.");return}
     if(type==="consommation")destination="consommé";
   }else if(type==="entrée"){if(!changeStock(m,"central",qty)){alert("Impossible d\'ajouter la quantité au magasin central.");return}}
   else{alert("Type de mouvement non reconnu.");return}
