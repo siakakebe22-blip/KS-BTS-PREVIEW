@@ -8,7 +8,7 @@
 (() => {
   "use strict";
 
-  const DB_NAME = "ks_btp_offline";
+  const DB_NAME = "ks_btp_demo_offline";
   const DB_VERSION = 1;
   const STORE = "snapshots";
   const LEGACY_KEY = "ks_btp_v1";
