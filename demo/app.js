@@ -312,7 +312,7 @@ function openMaintenance(record){
  $("#maintenanceForm").reset();$("#maintenanceId").value=record?.id||"";
  $("#maintenanceTitle").textContent=record?"Modifier l'intervention":"Déclarer une intervention";
  $("#maintenanceMaterial").innerHTML=db.materials.map(m=>`<option value="${m.id}">${esc(m.ref)} — ${esc(m.name)}</option>`).join("");
- $("#maintenanceDate").value=record?.date?new Date(record.date).toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+ $("#maintenanceDate").value=record?.date?new Date(record.date).toISOString().slice(0,10):new Date().toISOString().slice(0,10);$("#maintenanceCurrency").textContent=db.currency;
  $("#maintenanceStatus").value=record?.status||"À traiter";$("#maintenanceDescription").value=record?.description||"";$("#maintenanceCost").value=record?.cost??0;
  if(record)$("#maintenanceMaterial").value=record.materialId||"";
  $("#maintenanceDialog").showModal();
