@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14243a">
+  <meta name="description" content="KS BTP - Gestion indépendante des matériels et équipements de chantier.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <title>KS BTP — Gestion des matériels</title>
+</head>
+<body>
+<div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="Accueil KS BTP"><span class="brand-mark">KS</span><span><strong>KS BTP</strong><small>Gestion des matériels</small></span></a>
+      <nav class="navigation" aria-label="Navigation principale">
+        <button class="nav-link active" data-page="dashboard">▦ <span>Tableau de bord</span></button>
+        <button class="nav-link" data-page="materials">▤ <span>Matériels</span></button>
+        <button class="nav-link" data-page="sites">⌂ <span>Chantiers</span></button>
+        <button class="nav-link" data-page="movements">⇄ <span>Mouvements</span></button>
+        <button class="nav-link" data-page="documents">▣ <span>Bons de stock</span></button>
+        <button class="nav-link" data-page="maintenance">🔧 <span>Maintenance</span></button>
+        <button class="nav-link" data-page="reports">▥ <span>Rapports</span></button>
+        <button class="nav-link" data-page="users">♙ <span>Utilisateurs</span></button>
+        <button class="nav-link" data-page="settings">⚙ <span>Paramètres</span></button>
+      </nav>
+      <div class="sidebar-footer"><span class="status-dot"></span> Compte connecté · stockage local</div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle" aria-label="Ouvrir le menu">☰</button>
+        <div><p class="eyebrow">GESTION DES ÉQUIPEMENTS</p><h1 id="pageTitle">Tableau de bord</h1></div>
+        <div class="topbar-right"><span class="date-label" id="todayLabel"></span><span id="currentUserName" class="current-user">Mode démonstration · hors ligne</span><button id="logoutButton" class="small-button" type="button">Déconnexion</button><span class="avatar">KS</span></div>
+      </header>
+      <section id="pageContent" class="page-content" aria-live="polite"></section>
+      <footer class="footer">KS BTP · Application indépendante · Première version</footer>
+    </main>
+  </div>
+  <dialog id="itemDialog" class="dialog">
+    <form id="itemForm" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">INVENTAIRE</p><h2 id="dialogTitle">Ajouter un matériel</h2></div><button type="button" class="icon-button" id="closeDialog" aria-label="Fermer">×</button></div>
+      <input type="hidden" id="itemId">
+      <label>Nom du matériel<input id="itemName" required maxlength="100" placeholder="Ex. Perceuse électrique"></label>
+      <div class="form-grid">
+        <label>Catégorie<select id="itemCategory"><option>Maçonnerie</option><option>Électricité</option><option>Soudure</option><option>Peinture</option><option>Plomberie</option><option>Carrelage</option><option>Autre</option></select></label>
+        <label>Type<select id="itemType"><option value="equipment">Équipement réutilisable</option><option value="consumable">Consommable</option></select></label>
+        <label>Quantité initiale<input id="itemQuantity" type="number" min="0" step="0.01" value="0" required></label>
+        <label>Unité<input id="itemUnit" maxlength="20" value="pièce" required></label>
+        <label>Seuil minimum<input id="itemThreshold" type="number" min="0" step="0.01" value="0"></label>
+        <label>Emplacement<select id="itemLocation"><option value="central">Magasin central</option></select></label>
+      </div>
+      <div class="dialog-actions"><button type="button" class="button secondary" id="cancelDialog">Annuler</button><button type="submit" class="button primary">Enregistrer</button></div>
+    </form>
+  </dialog>
+  <dialog id="voucherDialog" class="dialog">
+    <form id="voucherForm">
+      <div class="dialog-heading"><div><p class="eyebrow">DOCUMENT DE STOCK</p><h2 id="voucherTitle">Créer un bon</h2></div><button type="button" class="icon-button" id="closeVoucher" aria-label="Fermer">×</button></div>
+      <input type="hidden" id="voucherType">
+      <div id="standardVoucherFields">
+        <label>Matériel<select id="voucherMaterial"></select></label>
+      </div>
+      <div id="receiptFields" hidden>
+        <label>Matériel à réceptionner<select id="voucherExistingMaterial"><option value="">＋ Nouveau matériel à enregistrer</option></select></label>
+        <div id="newReceiptMaterialFields" class="panel" style="margin:10px 0">
+          <h3>Identification et classement du matériel</h3>
+          <label>Désignation<input id="receiptMaterialName" maxlength="100" placeholder="Nom du matériel"></label>
+          <div class="form-grid">
+            <label>Catégorie<select id="receiptCategory"><option>Maçonnerie</option><option>Électricité</option><option>Soudure</option><option>Peinture</option><option>Plomberie</option><option>Carrelage</option><option>Autre</option></select></label>
+            <label>Type<select id="receiptType"><option value="equipment">Équipement réutilisable</option><option value="consumable">Consommable</option></select></label>
+            <label>Unité<input id="receiptUnit" value="pièce"></label>
+            <label>Seuil minimum<input id="receiptThreshold" type="number" min="0" value="2"></label>
+          </div>
+        </div>
+        <div class="panel" style="margin:10px 0">
+          <h3>Informations d'achat et de stockage</h3>
+          <div class="form-grid">
+            
+            <label>Date d'achat<input id="purchaseDate" type="date"></label>
+            <label>Fournisseur<input id="purchaseSupplier" maxlength="120" placeholder="Nom du fournisseur"></label>
+            <label>Référence facture / reçu<input id="purchaseInvoice" maxlength="80" placeholder="N° facture"></label>
+            <label>Prix d'achat unitaire<input id="purchaseUnitPrice" type="number" min="0" step="0.01" value="0"></label>
+            <label>Montant total calculé<input id="purchaseTotal" readonly value="0"></label>
+            <label>Emplacement de stockage<select id="receiptLocation"><option>Magasin central</option></select></label>
+          </div>
+        </div>
+      </div>
+      <div id="standardVoucherExtra" class="form-grid">
+        <label><span id="voucherSiteLabel">Chantier destinataire</span><select id="voucherSite"></select></label>
+      </div>
+      <label>Quantité<input id="voucherQuantity" type="number" min="0.01" step="0.01" value="1" required></label>
+      <label>Responsable / bénéficiaire<input id="voucherRecipient" maxlength="100" placeholder="Nom du responsable"></label>
+      <label>Observation<textarea id="voucherNote" rows="3" maxlength="500" placeholder="Détail ou motif du mouvement"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="button secondary" id="cancelVoucher">Annuler</button><button type="submit" class="button primary">Valider et imprimer le bon</button></div>
+    </form>
+  </dialog>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
