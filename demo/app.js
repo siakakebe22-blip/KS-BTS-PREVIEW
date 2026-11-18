@@ -1,6 +1,6 @@
 const KEY="ks_btp_v1";
 const CATEGORIES=["Maçonnerie","Électricité","Soudure","Peinture","Plomberie","Carrelage","Autre"];
-const initial={company:"KS BTP",currency:"GNF",threshold:2,materials:[],sites:[],movements:[],maintenance:[],documents:[],activityLog:[]};
+const initial={company:"KS BTP",currency:"GNF",threshold:2,materials:[],sites:[],movements:[],maintenance:[],documents:[],purchases:[],activityLog:[]};
 let storageLoadError="";
 let db=load();
 let currentPage="dashboard";
@@ -9,8 +9,18 @@ const $=s=>document.querySelector(s);
 function load(){
  const raw=localStorage.getItem(KEY);
  if(!raw)return {...initial};
- try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error("Structure locale invalide.");const data={...initial,...parsed};data.activityLog=Array.isArray(data.activityLog)?data.activityLog:[];return data}
- catch(error){storageLoadError="Les données locales n'ont pas pu être lues. Aucune écriture ne sera autorisée afin de ne pas écraser les données existantes. Exportez ou récupérez une sauvegarde avant de continuer.";console.error(error);return {...initial}}
+ try{
+  const parsed=JSON.parse(raw);
+  if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error("Structure locale invalide.");
+  const collections=["materials","sites","movements","maintenance","documents","purchases","activityLog"];
+  for(const key of collections){
+    if(parsed[key]!==undefined&&!Array.isArray(parsed[key]))throw new Error("La rubrique "+key+" n'est pas une liste valide.");
+    if(Array.isArray(parsed[key])&&parsed[key].some(record=>!record||typeof record!=="object"||Array.isArray(record)))throw new Error("Un enregistrement de la rubrique "+key+" est illisible.");
+  }
+  if(Array.isArray(parsed.materials)&&parsed.materials.some(material=>material.stockBalances!==undefined&&(!Array.isArray(material.stockBalances)||material.stockBalances.some(balance=>!balance||typeof balance!=="object"||Array.isArray(balance)))))throw new Error("La ventilation d'un stock matériel est illisible.");
+  return {...initial,...parsed};
+ }
+ catch(error){storageLoadError="Les données locales présentent une structure illisible ("+(error.message||"erreur inconnue")+"). Aucune écriture ne sera autorisée afin de ne pas écraser les données existantes. Utilisez l’outil de récupération ou exportez une copie avant toute restauration.";console.error(error);return {...initial}}
 }
 let saveQueue=Promise.resolve();
 function save(){
@@ -346,7 +356,7 @@ function stockAudit(){
   const balanceIssues=materials.filter(m=>Math.abs(m.difference)>0.0001);
   const documents=Array.isArray(db.documents)?db.documents:[];
   const movements=Array.isArray(db.movements)?db.movements:[];
-  const unlinkedDocuments=documents.filter(d=>d.ref&&!movements.some(m=>String(m.note||"").includes(String(d.ref))));
+  const unlinkedDocuments=documents.filter(d=>d.ref&&!movements.some(m=>String(m.note||"").startsWith("Document "+String(d.ref))));
   const refs=documents.map(d=>String(d.ref||"")).filter(Boolean);
   const duplicateRefs=refs.filter((ref,index)=>refs.indexOf(ref)!==index);
   const orphanMovements=movements.filter(m=>m.materialId&&!db.materials.some(item=>item.id===m.materialId));
