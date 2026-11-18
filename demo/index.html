@@ -93,6 +93,20 @@
       <div class="dialog-actions"><button type="button" class="button secondary" id="cancelVoucher">Annuler</button><button type="submit" class="button primary">Valider et imprimer le bon</button></div>
     </form>
   </dialog>
+  <dialog id="maintenanceDialog" class="dialog">
+    <form id="maintenanceForm">
+      <div class="dialog-heading"><div><p class="eyebrow">PARC MATÉRIEL</p><h2 id="maintenanceTitle">Déclarer une intervention</h2></div><button type="button" class="icon-button" id="closeMaintenance" aria-label="Fermer">×</button></div>
+      <input type="hidden" id="maintenanceId">
+      <label>Matériel concerné<select id="maintenanceMaterial" required></select></label>
+      <div class="form-grid">
+        <label>Date de l'intervention<input id="maintenanceDate" type="date" required></label>
+        <label>Statut<select id="maintenanceStatus" required><option>À traiter</option><option>En cours</option><option>Terminée</option></select></label>
+      </div>
+      <label>Description de la panne / intervention<textarea id="maintenanceDescription" rows="3" maxlength="500" required placeholder="Décrivez la panne ou le travail effectué"></textarea></label>
+      <label>Coût de l'intervention (GNF)<input id="maintenanceCost" type="number" min="0" step="1" value="0" required></label>
+      <div class="dialog-actions"><button type="button" class="button secondary" id="cancelMaintenance">Annuler</button><button type="submit" class="button primary">Enregistrer l'intervention</button></div>
+    </form>
+  </dialog>
   <script src="offline-storage.js"></script>
   <script type="module" src="offline-bootstrap.js"></script>
 </body>
