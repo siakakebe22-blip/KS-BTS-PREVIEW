@@ -47,8 +47,8 @@ jobs:
           if (!bootstrap.includes('await import("./app.js")')) {
             throw new Error('Démarrage de l’application après initialisation du stockage absent.');
           }
-          if (!bootstrap.includes('function validData(value)') || !bootstrap.includes('recordCount(snapshot)>recordCount(localData)')) {
-            throw new Error('Protection contre l’écrasement par une base vide absente.');
+          if (!bootstrap.includes('function validData(value)') || !bootstrap.includes('if(localIsValid&&snapshotIsValid)') || !bootstrap.includes('const localCopy=JSON.stringify(localData)') || !bootstrap.includes('sauvegarde IndexedDB est conservée sans remplacement automatique') || bootstrap.includes('localStorage.setItem(KEY,JSON.stringify(snapshot))') && !bootstrap.includes('else if(snapshotIsValid)')) {
+            throw new Error('Résolution prudente des copies locales divergentes absente.');
           }
           if (!app.includes('function stockAudit()') || !app.includes('Contrôle de cohérence du stock') || !app.includes('Aucun ajustement automatique')) {
             throw new Error('Contrôle de cohérence du stock en lecture seule absent.');
