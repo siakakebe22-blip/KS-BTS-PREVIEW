@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#14243a"><title>KS BTP — Test stockage hors connexion</title>
+<style>body{font:16px system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#172334;background:#f4f6f9}main{background:white;padding:22px;border-radius:14px;box-shadow:0 4px 18px #14243a12}h1{font-size:24px}.note{background:#fff4df;padding:12px;border-radius:8px}button{padding:12px 16px;border:0;border-radius:8px;background:#14243a;color:white;font-weight:600;margin:6px 6px 6px 0}button.secondary{background:#e8edf4;color:#172334}#result{white-space:pre-wrap;background:#f1f4f8;padding:14px;border-radius:8px;min-height:80px}a{color:#1457a6}</style></head>
+<body><main><h1>KS BTP — Vérification du stockage hors connexion</h1>
+<p class="note"><strong>Page de test séparée.</strong> Elle ne modifie pas l'application principale. La copie des anciennes données ne se fait qu'après confirmation et conserve la sauvegarde d'origine dans localStorage.</p>
+<p>Cette page vérifie si le navigateur accepte IndexedDB et permet de lire la copie locale préparée.</p>
+<button id="check">Tester IndexedDB</button><button id="read" class="secondary">Lire la copie préparée</button><button id="copy">Copier les données locales vers IndexedDB</button>
+<p id="result" role="status">En attente d'un test.</p><p><a href="./">Retour à KS BTP</a></p></main>
+<script src="./offline-storage.js"></script><script>
+const output=document.getElementById("result");const show=value=>output.textContent=value;
+document.getElementById("check").addEventListener("click",async()=>{try{const ok=await KSBtpOfflineStorage.isAvailable();show(ok?"SUCCÈS : IndexedDB est disponible sur cet appareil.":"ÉCHEC : IndexedDB indisponible.");}catch(e){show("ÉCHEC : "+e.message);}});
+document.getElementById("read").addEventListener("click",async()=>{try{const data=await KSBtpOfflineStorage.readSnapshot();show(data?"Copie trouvée.\\nMatériels : "+(data.materials?.length||0)+"\\nChantiers : "+(data.sites?.length||0)+"\\nMouvements : "+(data.movements?.length||0)+"\\nBons : "+(data.documents?.length||0):"Aucune copie préparée pour le moment.");}catch(e){show("Erreur de lecture : "+e.message);}});
+document.getElementById("copy").addEventListener("click",async()=>{if(!confirm("Copier les données de cet appareil dans IndexedDB ? L'ancienne sauvegarde localStorage ne sera pas supprimée. Une copie précédente dans IndexedDB sera remplacée."))return;try{const result=await KSBtpOfflineStorage.copyLegacyData();show("COPIE TERMINÉE.\\nSauvegarde originale conservée : "+result.originalPreserved+"\\nMatériels : "+result.counts.materials+"\\nChantiers : "+result.counts.sites+"\\nMouvements : "+result.counts.movements+"\\nBons : "+result.counts.documents);}catch(e){show("Copie impossible : "+e.message);}});
+</script></body></html>
