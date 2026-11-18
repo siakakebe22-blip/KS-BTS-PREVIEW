@@ -1,4 +1,4 @@
-const CACHE="ks-btp-demo-offline-v6";
+const CACHE="ks-btp-demo-offline-v7";
 const ASSETS=["./","./index.html","./style.css","./app.js","./offline-storage.js","./offline-bootstrap.js","./manifest.webmanifest"];
 
 self.addEventListener("install",event=>{
@@ -22,21 +22,33 @@ self.addEventListener("fetch",event=>{
   if(request.method!=="GET")return;
 
   event.respondWith((async()=>{
-    const cached=await caches.match(request);
+    const cache=await caches.open(CACHE);
+    const cached=await cache.match(request);
     if(cached)return cached;
+
+    // Les navigations vers /demo/ et /demo/index.html doivent toutes
+    // retomber sur la page locale précachée, même après fermeture de Chrome.
+    if(request.mode==="navigate"){
+      const indexUrl=new URL("./index.html",self.registration.scope).href;
+      const rootUrl=new URL("./",self.registration.scope).href;
+      const offlinePage=await cache.match(indexUrl)||await cache.match(rootUrl);
+      if(offlinePage){
+        try{
+          const response=await fetch(request);
+          if(response.ok)return response;
+        }catch(_){}
+        return offlinePage;
+      }
+    }
 
     try{
       const response=await fetch(request);
       if(response.ok&&new URL(request.url).origin===self.location.origin){
         const copy=response.clone();
-        caches.open(CACHE).then(cache=>cache.put(request,copy)).catch(()=>{});
+        cache.put(request,copy).catch(()=>{});
       }
       return response;
     }catch(error){
-      if(request.mode==="navigate"){
-        const offlinePage=await caches.match("./index.html");
-        if(offlinePage)return offlinePage;
-      }
       return new Response("Cette ressource n’est pas disponible hors connexion.",{
         status:503,
         statusText:"Service Unavailable",
