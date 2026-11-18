@@ -14,16 +14,26 @@
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#" aria-label="Accueil KS BTP"><span class="brand-mark">KS</span><span><strong>KS BTP</strong><small>Gestion des matériels</small></span></a>
       <nav class="navigation" aria-label="Navigation principale">
-        <button class="nav-link active" data-page="dashboard">▦ <span>Tableau de bord</span></button>
-        <button class="nav-link" data-page="materials">▤ <span>Matériels</span></button>
-        <button class="nav-link" data-page="sites">⌂ <span>Chantiers</span></button>
-        <button class="nav-link" data-page="movements">⇄ <span>Mouvements</span></button>
-        <button class="nav-link" data-page="documents">▣ <span>Bons de stock</span></button>
-        <button class="nav-link" data-page="maintenance">🔧 <span>Maintenance</span></button>
-        <button class="nav-link" data-page="reports">▥ <span>Rapports</span></button>
-        <button class="nav-link" data-page="activity">☷ <span>Journal des activités</span></button>
-        <button class="nav-link" data-page="users">♙ <span>Utilisateurs</span></button>
-        <button class="nav-link" data-page="settings">⚙ <span>Paramètres</span></button>
+        <div class="nav-group"><span class="nav-group-title">ESPACE DE TRAVAIL</span>
+          <button class="nav-link active" data-page="dashboard"><span class="nav-icon">▦</span><span>Tableau de bord</span></button>
+        </div>
+        <div class="nav-group"><span class="nav-group-title">PARC ET CHANTIERS</span>
+          <button class="nav-link" data-page="materials"><span class="nav-icon">▤</span><span>Matériels</span></button>
+          <button class="nav-link" data-page="sites"><span class="nav-icon">⌂</span><span>Chantiers</span></button>
+          <button class="nav-link" data-page="maintenance"><span class="nav-icon">🔧</span><span>Maintenance</span></button>
+        </div>
+        <div class="nav-group"><span class="nav-group-title">STOCK ET OPÉRATIONS</span>
+          <button class="nav-link" data-page="movements"><span class="nav-icon">⇄</span><span>Mouvements</span></button>
+          <button class="nav-link" data-page="documents"><span class="nav-icon">▣</span><span>Bons de stock</span></button>
+        </div>
+        <div class="nav-group"><span class="nav-group-title">SUIVI ET CONTRÔLE</span>
+          <button class="nav-link" data-page="reports"><span class="nav-icon">▥</span><span>Rapports</span></button>
+          <button class="nav-link" data-page="activity"><span class="nav-icon">☷</span><span>Journal des activités</span></button>
+        </div>
+        <div class="nav-group"><span class="nav-group-title">ADMINISTRATION</span>
+          <button class="nav-link" data-page="users"><span class="nav-icon">♙</span><span>Utilisateurs</span></button>
+          <button class="nav-link" data-page="settings"><span class="nav-icon">⚙</span><span>Paramètres</span></button>
+        </div>
       </nav>
       <div class="sidebar-footer"><span class="status-dot"></span> Compte connecté · stockage local</div>
     </aside>
