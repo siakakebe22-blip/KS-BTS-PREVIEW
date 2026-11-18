@@ -40,11 +40,18 @@ jobs:
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
           }
-          if (!sw.includes('ks-btp-demo-offline-v8') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+          if (!sw.includes('ks-btp-demo-offline-v9') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
             throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
           }
           if (!bootstrap.includes('await import("./app.js")')) {
             throw new Error('Démarrage de l’application après initialisation du stockage absent.');
+          }
+          if (!bootstrap.includes('function validData(value)') || !bootstrap.includes('recordCount(snapshot)>recordCount(localData)')) {
+            throw new Error('Protection contre l’écrasement par une base vide absente.');
+          }
+          const storage = fs.readFileSync('demo/offline-storage.js', 'utf8');
+          if (!storage.includes('const DB_VERSION=2') || !storage.includes('const HISTORY_LIMIT=10') || !storage.includes('readHistory')) {
+            throw new Error('Historique des sauvegardes locales absent.');
           }
           const required = ['index.html', 'style.css', 'app.js', 'offline-storage.js', 'offline-bootstrap.js', 'manifest.webmanifest', 'icon.svg'];
           for (const file of required) {
