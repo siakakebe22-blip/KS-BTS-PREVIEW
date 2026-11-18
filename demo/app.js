@@ -566,17 +566,31 @@ $("#itemForm").addEventListener("submit",async e=>{
 $("#closeDialog").onclick=closeItem;$("#cancelDialog").onclick=closeItem;$("#menuToggle").onclick=()=>$("#sidebar").classList.toggle("open");
 function validateBackup(value){
   if(!value||typeof value!=="object"||Array.isArray(value)||!Array.isArray(value.materials))return false;
-  for(const key of ["sites","movements","maintenance","documents"]){
+  for(const key of ["sites","movements","maintenance","documents","purchases","activityLog"]){
     if(value[key]!==undefined&&!Array.isArray(value[key]))return false;
   }
-  if(value.materials.some(m=>!m||typeof m!=="object"||!m.id||typeof m.name!=="string"||!Number.isFinite(Number(m.quantity))||Number(m.quantity)<0))return false;
-  if((value.sites||[]).some(s=>!s||typeof s!=="object"||!s.id||typeof s.name!=="string"))return false;
-  if((value.movements||[]).some(m=>!m||typeof m!=="object"||!m.materialId||!Number.isFinite(Number(m.quantity))||Number(m.quantity)<=0))return false;
-  if((value.maintenance||[]).some(m=>!m||typeof m!=="object"))return false;
-  if((value.documents||[]).some(d=>!d||typeof d!=="object"))return false;
+  if(value.materials.some(m=>!m||typeof m!=="object"||Array.isArray(m)||!m.id||typeof m.name!=="string"||!Number.isFinite(Number(m.quantity))||Number(m.quantity)<0||(m.stockBalances!==undefined&&(!Array.isArray(m.stockBalances)||m.stockBalances.some(b=>!b||typeof b!=="object"||Array.isArray(b))))))return false;
+  if((value.sites||[]).some(s=>!s||typeof s!=="object"||Array.isArray(s)||!s.id||typeof s.name!=="string"))return false;
+  if((value.movements||[]).some(m=>!m||typeof m!=="object"||Array.isArray(m)||(!m.materialId&&typeof m.materialName!=="string")||!Number.isFinite(Number(m.quantity))||Number(m.quantity)<=0))return false;
+  if((value.maintenance||[]).some(m=>!m||typeof m!=="object"||Array.isArray(m)))return false;
+  if((value.documents||[]).some(d=>!d||typeof d!=="object"||Array.isArray(d)))return false;
+  if((value.purchases||[]).some(p=>!p||typeof p!=="object"||Array.isArray(p)))return false;
+  if((value.activityLog||[]).some(x=>!x||typeof x!=="object"||Array.isArray(x)))return false;
   return true;
 }
-document.addEventListener("change",e=>{if(e.target.id==="restoreFile"&&e.target.files[0]){const reader=new FileReader();reader.onload=()=>{try{const value=JSON.parse(reader.result);if(!validateBackup(value))throw Error("Structure de sauvegarde invalide.");if(confirm("Remplacer les données locales par cette sauvegarde ?")){const oldLog=Array.isArray(db.activityLog)?db.activityLog:[];const importedLog=Array.isArray(value.activityLog)?value.activityLog:[];const seen=new Set();db={...initial,...value,sites:value.sites||[],movements:value.movements||[],maintenance:value.maintenance||[],documents:value.documents||[],activityLog:[...oldLog,...importedLog].filter(x=>x&&x.id&&!seen.has(x.id)&&seen.add(x.id)).slice(-5000)};logAction("Restauration","Sauvegarde","Sauvegarde restaurée; historique précédent fusionné et conservé.");save();render();alert("Sauvegarde restaurée. Historique conservé.")}}catch(error){alert("Fichier de sauvegarde invalide ou incomplet. Les données actuelles ont été conservées.")}};reader.readAsText(e.target.files[0])}});
+document.addEventListener("change",e=>{if(e.target.id==="restoreFile"&&e.target.files[0]){const reader=new FileReader();reader.onload=async()=>{try{
+  const value=JSON.parse(reader.result);
+  if(!validateBackup(value))throw Error("Structure de sauvegarde invalide.");
+  if(!confirm("Remplacer les données locales par cette sauvegarde ? Une copie de l'état actuel sera d'abord enregistrée."))return;
+  const backupReady=await save();
+  if(!backupReady){alert("Restauration annulée : la sauvegarde de sécurité de l'état actuel n'a pas pu être vérifiée. Les données actuelles restent en place. Téléchargez d'abord une copie JSON ou réessayez lorsque le stockage local fonctionne.");return}
+  const oldLog=Array.isArray(db.activityLog)?db.activityLog:[],importedLog=Array.isArray(value.activityLog)?value.activityLog:[];
+  const seen=new Set();
+  db={...initial,...value,sites:value.sites||[],movements:value.movements||[],maintenance:value.maintenance||[],documents:value.documents||[],purchases:value.purchases||[],activityLog:[...oldLog,...importedLog].filter(x=>x&&x.id&&!seen.has(x.id)&&seen.add(x.id)).slice(-5000)};
+  logAction("Restauration","Sauvegarde","Sauvegarde restaurée; historique précédent fusionné et conservé.");
+  const restored=await save();render();
+  alert(restored?"Sauvegarde restaurée. L'état précédent reste conservé dans l'historique de sécurité.":"Sauvegarde chargée dans le stockage principal, mais la copie secondaire a signalé une erreur. Téléchargez immédiatement une sauvegarde JSON et vérifiez l'outil de récupération.");
+}catch(error){alert("Fichier de sauvegarde invalide ou incomplet. Les données actuelles ont été conservées. Détail : "+(error.message||"erreur inconnue"));}};reader.readAsText(e.target.files[0])}});
 $("#todayLabel").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 // Enregistrement du service worker même si le démarrage différé a dépassé l'événement load.
 if("serviceWorker" in navigator && location.protocol!=="file:"){
