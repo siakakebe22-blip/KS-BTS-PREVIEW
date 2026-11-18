@@ -49,6 +49,9 @@ jobs:
           if (!bootstrap.includes('function validData(value)') || !bootstrap.includes('recordCount(snapshot)>recordCount(localData)')) {
             throw new Error('Protection contre l’écrasement par une base vide absente.');
           }
+          if (!app.includes('function stockAudit()') || !app.includes('Contrôle de cohérence du stock') || !app.includes('Aucun ajustement automatique')) {
+            throw new Error('Contrôle de cohérence du stock en lecture seule absent.');
+          }
           if (!html.includes('id="voucherStockAvailable"') || !app.includes('Stock disponible sur ') || !app.includes('$("#voucherStockAvailable").textContent')) {
             throw new Error('Affichage dynamique du stock disponible dans le bon absent.');
           }
