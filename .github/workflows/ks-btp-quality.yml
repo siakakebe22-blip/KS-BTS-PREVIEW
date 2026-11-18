@@ -82,7 +82,7 @@ jobs:
           if (!app.includes('function stockByUnit()') || !app.includes('Stock disponible par unité') || !app.includes('totalByUnit') || !app.includes('m.threshold??db.threshold')) {
             throw new Error('Synthèse des stocks par unité ou seuil zéro non géré.');
           }
-          if (!app.includes('balances.some(x=>!Number.isFinite(Number(x.quantity))||Number(x.quantity)<0)') || !app.includes('Math.abs(aggregate-balanceTotal)>0.0001')) {
+          if (!app.includes('function applyStockChanges(item,changes)') || !app.includes('balances.some(x=>!Number.isFinite(Number(x.quantity))||Number(x.quantity)<0)') || !app.includes('Math.abs(aggregate-balanceTotal)>0.0001')) {
             throw new Error('Une écriture pourrait écraser une quantité invalide ou une ventilation incohérente.');
           }
           if (!app.includes('balance.locationId') || !app.includes('Emplacement non identifié') || !app.includes('locationName:resolved?resolved.name')) {
@@ -118,7 +118,7 @@ jobs:
             if (end < 0) end = app.length;
             return app.slice(start, end);
           };
-          const engineSource = ['stockLocation','ensureStockBalances','stockAt','changeStock','stockByUnit','totalStock']
+          const engineSource = ['stockLocation','ensureStockBalances','stockAt','changeStock','applyStockChanges','stockByUnit','totalStock']
             .map(functionSource).join('\n');
           const createEngine = new Function('db','id',engineSource + '\nreturn {stockAt,changeStock,stockByUnit,totalStock};');
           const testDb = {sites:[{id:'koloma-id',name:'Koloma'}],materials:[]};
@@ -132,6 +132,9 @@ jobs:
           if (opening !== 77 || engine.stockAt(cement,'koloma-id') !== 194 || cement.quantity !== 194) {
             throw new Error('Échec du calcul ouverture + réceptions - sorties = 194 sacs.');
           }
+          const atomic = {id:'atomic',name:'Test atomique',unit:'Sacs',quantity:10,stockBalances:[{locationId:'central',locationName:'Magasin central',quantity:10}]};
+          const atomicBefore = JSON.stringify(atomic);
+          if (engine.applyStockChanges(atomic,[['central',-5],['koloma-id',Number.NaN]]) !== false || JSON.stringify(atomic) !== atomicBefore) throw new Error('Une opération multi-emplacements échouée doit annuler tous ses changements.');
           const transfer = {id:'transfer',name:'Peinture',unit:'Litre',quantity:50,stockBalances:[{locationId:'central',locationName:'Magasin central',quantity:50}]};
           if (!engine.changeStock(transfer,'central',-20) || !engine.changeStock(transfer,'koloma-id',20)) throw new Error('Transfert central vers chantier refusé.');
           if (engine.stockAt(transfer,'central') !== 30 || engine.stockAt(transfer,'koloma-id') !== 20 || transfer.quantity !== 50) throw new Error('Le transfert doit conserver le stock total.');
