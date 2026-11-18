@@ -1,9 +1,8 @@
 /*
- * KS BTP — Couche de stockage hors connexion (préparation phase 1)
+ * KS BTP — Couche de stockage hors connexion
  *
- * Module isolé : il n'est pas encore branché à app.js.
- * Il ne lit/écrit aucune donnée automatiquement et ne modifie pas localStorage.
- * La migration doit être déclenchée explicitement après validation des tests.
+ * Ce module fournit une copie de sauvegarde IndexedDB pour l'application de démonstration.
+ * La copie locale principale reste dans localStorage ; aucune donnée n'est supprimée ici.
  */
 (() => {
   "use strict";
