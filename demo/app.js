@@ -37,7 +37,7 @@ function money(v){return new Intl.NumberFormat("fr-FR",{maximumFractionDigits:2}
 function date(v){return new Date(v).toLocaleDateString("fr-FR")}
 function id(){return "K"+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase()}
 function stockLocation(value){
-  if(!value||value==="central"||value==="Magasin central")return {id:"central",name:"Magasin central"};
+  if(value==="central"||value==="Magasin central")return {id:"central",name:"Magasin central"};
   const site=db.sites.find(x=>x.id===value||x.name===value);
   return site?{id:site.id,name:site.name}:{id:"__unallocated__",name:"Stock historique à répartir"};
 }
@@ -235,7 +235,28 @@ async function resetStaffPassword(uid){
 function settingsPage(el){el.innerHTML=`<div class="welcome"><div><h2>Paramètres de l'application</h2><p>Personnalisez les informations de base de KS BTP.</p></div><button class="button primary" data-action="save-settings">Enregistrer</button></div><div class="panel settings-grid"><label>Nom de l'entreprise<input id="companySetting" value="${esc(db.company)}"></label><label>Devise<select id="currencySetting">${["GNF","CFA","EUR","USD"].map(c=>`<option ${db.currency===c?"selected":""}>${c}</option>`).join("")}</select></label><label>Seuil d'alerte par défaut<input id="thresholdSetting" type="number" min="0" value="${db.threshold}"></label><label>Langue de l'interface<select disabled><option>Français</option></select></label></div><div class="notice" style="margin-top:16px">Mode démonstration indépendant : les données sont sauvegardées sur cet appareil avec IndexedDB. Aucun compte ni serveur Firebase n’est utilisé.</div>`}
 function openItem(item){$("#itemForm").reset();$("#itemId").value=item?.id||"";$("#dialogTitle").textContent=item?"Modifier le matériel":"Ajouter un matériel";$("#itemName").value=item?.name||"";$("#itemCategory").value=item?.category||"Maçonnerie";$("#itemType").value=item?.type||"equipment";$("#itemQuantity").value=item?.quantity??0;$("#itemUnit").value=item?.unit||"pièce";$("#itemThreshold").value=item?.threshold??db.threshold;$("#itemLocation").innerHTML='<option value="central">Magasin central</option>'+db.sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");$("#itemLocation").value=item?.location||"central";$("#itemDialog").showModal()}
 function closeItem(){$("#itemDialog").close()}
-function addMovement(){if(!db.materials.length){alert("Ajoutez d'abord un matériel.");return}const materialId=prompt("ID du matériel :\n"+db.materials.map(m=>m.id+" — "+m.name).join("\n"));const m=db.materials.find(x=>x.id===materialId);if(!m)return;const type=prompt("Type : entrée, sortie, retour ou consommation","sortie");if(!["entrée","sortie","retour","consommation"].includes(type))return;const qty=Number(prompt("Quantité", "1"));if(!Number.isFinite(qty)||qty<=0)return;if((type==="sortie"||type==="consommation")&&qty>Number(m.quantity)){alert("Stock insuffisant.");return}const site=prompt("Chantier ou origine (nom)","Magasin central")||"Non précisé";if(type==="entrée"||type==="retour")m.quantity=Number(m.quantity)+qty;else m.quantity=Number(m.quantity)-qty;db.movements.push({id:id(),date:new Date().toISOString(),type,materialId:m.id,materialName:m.name,quantity:qty,location:site,note:""});save();render()}
+function addMovement(){
+  if(!db.materials.length){alert("Ajoutez d'abord un matériel.");return}
+  const materialId=prompt("ID du matériel :\n"+db.materials.map(m=>m.id+" — "+m.name).join("\n"));
+  const m=db.materials.find(x=>x.id===materialId);if(!m)return;
+  const type=prompt("Type : entrée, sortie, retour ou consommation","sortie");
+  if(!["entrée","sortie","retour","consommation"].includes(type))return;
+  const qty=Number(prompt("Quantité","1"));if(!Number.isFinite(qty)||qty<=0){alert("Quantité invalide.");return}
+  const choices=db.sites.map(x=>x.id+" — "+x.name).join("\n");
+  let location="central",source="central",destination="central";
+  if(type==="sortie"){
+    const siteId=prompt("ID du chantier destinataire :\n"+choices);if(!db.sites.some(x=>x.id===siteId))return;
+    const available=stockAt(m,"central")+unallocatedStock(m);if(qty>available){alert("Stock insuffisant au magasin central et dans le stock historique.");return}
+    let remain=qty,take=Math.min(stockAt(m,"central"),qty);if(take){changeStock(m,"central",-take);remain-=take}if(remain)changeStock(m,"__unallocated__",-remain);
+    changeStock(m,siteId,qty);location=db.sites.find(x=>x.id===siteId).name;destination=siteId;
+  }else if(type==="retour"||type==="consommation"){
+    const siteId=prompt("ID du chantier concerné :\n"+choices);if(!db.sites.some(x=>x.id===siteId))return;
+    if(qty>stockAt(m,siteId)){alert("Stock insuffisant sur ce chantier.");return}
+    changeStock(m,siteId,-qty);location=db.sites.find(x=>x.id===siteId).name;source=siteId;
+    if(type==="retour")changeStock(m,"central",qty);else destination="consommé";
+  }else{changeStock(m,"central",qty)}
+  db.movements.push({id:id(),date:new Date().toISOString(),type,materialId:m.id,materialName:m.name,quantity:qty,location,source,destination,note:""});save();render();
+}
 function exportCsv(){const rows=[["Référence","Désignation","Catégorie","Type","Quantité","Unité","Emplacement"],...db.materials.map(m=>[m.ref,m.name,m.category,m.type,m.quantity,m.unit,m.location])];const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\n");download("ks-btp-materiels.csv",csv,"text/csv;charset=utf-8")}
 function download(name,data,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 document.querySelectorAll(".nav-link[data-page]").forEach(nav=>{nav.addEventListener("click",e=>{e.preventDefault();go(nav.dataset.page)});});
