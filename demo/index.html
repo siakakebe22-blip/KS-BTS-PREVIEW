@@ -52,6 +52,20 @@
       <div class="dialog-actions"><button type="button" class="button secondary" id="cancelDialog">Annuler</button><button type="submit" class="button primary">Enregistrer</button></div>
     </form>
   </dialog>
+  <dialog id="movementDialog" class="dialog">
+    <form id="movementForm">
+      <div class="dialog-heading"><div><p class="eyebrow">MOUVEMENT DE STOCK</p><h2>Nouveau mouvement</h2></div><button type="button" class="icon-button" id="closeMovement" aria-label="Fermer">×</button></div>
+      <div class="form-grid">
+        <label>Type de mouvement<select id="movementType" required><option value="entrée">Entrée au magasin central</option><option value="sortie">Sortie vers un chantier</option><option value="retour">Retour au magasin central</option><option value="consommation">Consommation sur chantier</option></select></label>
+        <label>Matériel<select id="movementMaterial" required><option value="">Choisir un matériel</option></select></label>
+        <label>Quantité<input id="movementQuantity" type="number" min="0.01" step="0.01" value="1" required></label>
+        <label id="movementSiteFields" hidden><span id="movementSiteLabel">Chantier</span><select id="movementSite"><option value="">Choisir un chantier</option></select></label>
+      </div>
+      <p id="movementStockInfo" class="notice" role="status" aria-live="polite">Sélectionnez un matériel pour consulter le stock.</p>
+      <label>Observation (facultatif)<textarea id="movementNote" rows="2" maxlength="300" placeholder="Motif ou précision du mouvement"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="button secondary" id="cancelMovement">Annuler</button><button type="submit" class="button primary">Enregistrer le mouvement</button></div>
+    </form>
+  </dialog>
   <dialog id="voucherDialog" class="dialog">
     <form id="voucherForm">
       <div class="dialog-heading"><div><p class="eyebrow">DOCUMENT DE STOCK</p><h2 id="voucherTitle">Créer un bon</h2></div><button type="button" class="icon-button" id="closeVoucher" aria-label="Fermer">×</button></div>
