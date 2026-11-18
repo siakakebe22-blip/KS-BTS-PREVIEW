@@ -7,39 +7,64 @@ const main=document.querySelector(".main-content");
 const page=document.querySelector(".page-content");
 if(main&&page)main.insertBefore(status,page);
 
+let snapshot=null;
+let storageReadError=null;
 try{
-  const snapshot=await window.KSBtpOfflineStorage.readSnapshot();
-  const localRaw=localStorage.getItem(KEY);
-
-  // localStorage reste la source prioritaire lorsqu'il contient déjà des données :
-  // cela évite qu'un ancien snapshot IndexedDB remplace des changements récents.
-  if(localRaw){
-    try{
-      const localData=JSON.parse(localRaw);
-      if(!localData||typeof localData!=="object"||Array.isArray(localData)){
-        throw new Error("Format local KS BTP non reconnu.");
-      }
-      await window.KSBtpOfflineStorage.saveSnapshot(localData);
-    }catch(localError){
-      if(snapshot&&typeof snapshot==="object"){
-        localStorage.setItem(KEY,JSON.stringify(snapshot));
-      }else{
-        throw localError;
-      }
-    }
-  }else if(snapshot&&typeof snapshot==="object"){
-    localStorage.setItem(KEY,JSON.stringify(snapshot));
-  }else{
-    const initialData={
-      company:"KS BTP",currency:"GNF",threshold:2,
-      materials:[],sites:[],movements:[],maintenance:[],documents:[]
-    };
-    localStorage.setItem(KEY,JSON.stringify(initialData));
-    await window.KSBtpOfflineStorage.saveSnapshot(initialData);
-  }
-  status.textContent="Stockage hors connexion prêt. Les modifications seront sauvegardées automatiquement sur cet appareil.";
+  snapshot=await window.KSBtpOfflineStorage.readSnapshot();
 }catch(error){
-  status.textContent="Attention : sauvegarde locale à vérifier. "+error.message;
+  storageReadError=error;
+}
+
+const localRaw=localStorage.getItem(KEY);
+let localData=null;
+let localIsValid=false;
+let localParseError=null;
+
+if(localRaw){
+  try{
+    localData=JSON.parse(localRaw);
+    if(!localData||typeof localData!=="object"||Array.isArray(localData)){
+      throw new Error("Format local KS BTP non reconnu.");
+    }
+    localIsValid=true;
+  }catch(error){
+    localParseError=error;
+  }
+}
+
+if(localIsValid){
+  // La copie locale valide est prioritaire. Une panne IndexedDB ne doit jamais
+  // déclencher le remplacement de cette copie par un ancien instantané.
+  try{
+    await window.KSBtpOfflineStorage.saveSnapshot(localData);
+    status.textContent="Stockage hors connexion prêt. Les modifications seront sauvegardées automatiquement sur cet appareil.";
+  }catch(error){
+    status.textContent="Données locales accessibles. Copie de sécurité IndexedDB indisponible : "+error.message;
+  }
+}else if(snapshot&&typeof snapshot==="object"&&!Array.isArray(snapshot)){
+  // Restauration uniquement si la copie locale est absente ou illisible.
+  localStorage.setItem(KEY,JSON.stringify(snapshot));
+  status.textContent="Données récupérées depuis la sauvegarde locale IndexedDB.";
+}else if(localRaw&&localParseError){
+  // Ne pas démarrer avec une base vide qui pourrait écraser la copie illisible.
+  status.textContent="Données locales à récupérer : le format existant est illisible. Aucune donnée n'a été remplacée. Exportez ou restaurez une sauvegarde avant de continuer.";
+  throw localParseError;
+}else{
+  const initialData={
+    company:"KS BTP",currency:"GNF",threshold:2,
+    materials:[],sites:[],movements:[],maintenance:[],documents:[]
+  };
+  localStorage.setItem(KEY,JSON.stringify(initialData));
+  try{
+    await window.KSBtpOfflineStorage.saveSnapshot(initialData);
+    status.textContent="Nouveau stockage local prêt.";
+  }catch(error){
+    status.textContent="Stockage local accessible, mais copie IndexedDB indisponible : "+error.message;
+  }
+}
+
+if(storageReadError&&!localIsValid&&!snapshot){
+  status.textContent="Attention : impossible de lire la sauvegarde locale. "+storageReadError.message;
 }
 
 await import("./app.js");
