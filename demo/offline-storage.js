@@ -1,14 +1,15 @@
 /*
- * KS BTP — Stockage hors connexion avec historique de sécurité.
- * La sauvegarde principale et les instantanés d'historique sont écrits
- * dans une même transaction : un échec n'efface pas la copie précédente.
+ * KS BTP — Stockage hors connexion protégé.
+ * IMPORTANT : utiliser une base dédiée évite de modifier la base IndexedDB
+ * historique partagée avec l'ancienne version de production sur la même origine.
  */
 (() => {
   "use strict";
-  const DB_NAME="ks_btp_demo_offline";
-  const DB_VERSION=2;
+  const DB_NAME="ks_btp_safe_store";
+  const DB_VERSION=1;
   const STORE="snapshots";
   const HISTORY="history";
+  const LEGACY_DB_NAME="ks_btp_demo_offline";
   const LEGACY_KEY="ks_btp_v1";
   const SNAPSHOT_ID="main";
   const HISTORY_LIMIT=10;
@@ -31,14 +32,29 @@
     return dbPromise;
   }
 
-  async function readSnapshot(){
-    const database=await openDatabase();
+  async function readFrom(databaseName){
     return new Promise((resolve,reject)=>{
-      const transaction=database.transaction(STORE,"readonly");
-      const request=transaction.objectStore(STORE).get(SNAPSHOT_ID);
-      request.onsuccess=()=>resolve(request.result?.data??null);
-      request.onerror=()=>reject(request.error||new Error("Lecture locale impossible."));
+      // Sans version explicite : lecture seule de la version existante, sans migration.
+      const request=indexedDB.open(databaseName);
+      request.onsuccess=()=>{
+        const database=request.result;
+        if(!database.objectStoreNames.contains(STORE)){database.close();resolve(null);return;}
+        try{
+          const transaction=database.transaction(STORE,"readonly");
+          const read=transaction.objectStore(STORE).get(SNAPSHOT_ID);
+          read.onsuccess=()=>{const value=read.result?.data??null;database.close();resolve(value);};
+          read.onerror=()=>{const error=read.error;database.close();reject(error||new Error("Lecture locale impossible."));};
+        }catch(error){database.close();reject(error);}
+      };
+      request.onerror=()=>reject(request.error||new Error("Lecture de la sauvegarde locale impossible."));
     });
+  }
+
+  async function readSnapshot(){
+    const current=await readFrom(DB_NAME);
+    if(current)return current;
+    // Compatibilité : récupérer l'instantané historique sans modifier cette base.
+    return readFrom(LEGACY_DB_NAME);
   }
 
   async function readHistory(){
