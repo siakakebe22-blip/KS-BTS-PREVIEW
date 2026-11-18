@@ -71,5 +71,5 @@ if(localIsValid&&snapshotIsValid){
   }
 }
 await import("./app.js");
-window.addEventListener("ks-offline-save-error",event=>{status.textContent="Erreur de sauvegarde locale : "+event.detail;});
+window.addEventListener("ks-offline-save-error",event=>{const detail=String(event.detail||"Erreur inconnue.");status.textContent=detail.startsWith("SAUVEGARDE DE SÉCURITÉ :")?detail:"ÉCHEC DU STOCKAGE PRINCIPAL : "+detail;});
 window.addEventListener("ks-offline-saved",()=>{status.textContent="Sauvegarde locale effectuée avec historique de sécurité.";});
