@@ -76,8 +76,8 @@ jobs:
           if (!app.includes('Matériels présents') || !app.includes('Référence(s)') || !app.includes('site-overview')) {
             throw new Error('Contenu synthétique de la page chantiers absent.');
           }
-          if (!app.includes('function sitesPage(el)') || !app.includes('Stock par unité') || !app.includes('site-grid') || !app.includes('siteStatusFilter') || !app.includes('siteSearch')) {
-            throw new Error('Page chantiers modernisée, recherche ou filtres absents.');
+          if (!app.includes('function sitesPage(el)') || !app.includes('Matériels présents') || !app.includes('site-overview') || !app.includes('siteStatusFilter') || !app.includes('siteSearch') || !app.includes('grouped=new Map()')) {
+            throw new Error('Page chantiers structurée, regroupement des matériels ou filtres absents.');
           }
           if (!app.includes('function stockByUnit()') || !app.includes('unités distinctes') || !app.includes('m.threshold??db.threshold')) {
             throw new Error('Synthèse des stocks par unité ou seuil zéro non géré.');
