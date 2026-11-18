@@ -50,7 +50,7 @@ jobs:
             throw new Error('Protection contre l’écrasement par une base vide absente.');
           }
           const storage = fs.readFileSync('demo/offline-storage.js', 'utf8');
-          if (!storage.includes('const DB_VERSION=2') || !storage.includes('const HISTORY_LIMIT=10') || !storage.includes('readHistory')) {
+          if (!storage.includes('const DB_VERSION=1') || !storage.includes('const DB_NAME="ks_btp_safe_store"') || !storage.includes('const HISTORY_LIMIT=10') || !storage.includes('readHistory') || !storage.includes('const LEGACY_DB_NAME="ks_btp_demo_offline"')) {
             throw new Error('Historique des sauvegardes locales absent.');
           }
           const required = ['index.html', 'style.css', 'app.js', 'offline-storage.js', 'offline-bootstrap.js', 'manifest.webmanifest', 'icon.svg'];
