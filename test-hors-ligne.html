@@ -78,7 +78,7 @@ $("addSite").addEventListener("click",async()=>{
 $("refresh").addEventListener("click",load);
 $("clear").addEventListener("click",async()=>{
  if(!confirm("Effacer les données de cette page de test dans IndexedDB ? Cette action ne touche pas l'application principale."))return;
- snapshot=emptySnapshot();await save("Données de test effacées.");
+ snapshot.materials=(snapshot.materials||[]).filter(x=>!x.isTest);snapshot.sites=(snapshot.sites||[]).filter(x=>!x.isTest);await save("Données de test effacées. Les autres données ont été conservées.");
 });
 load();
 </script>
