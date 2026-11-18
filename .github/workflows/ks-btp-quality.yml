@@ -79,8 +79,14 @@ jobs:
           if (!app.includes('function sitesPage(el)') || !app.includes('Matériels présents') || !app.includes('site-overview') || !app.includes('siteStatusFilter') || !app.includes('siteSearch') || !app.includes('grouped=new Map()')) {
             throw new Error('Page chantiers structurée, regroupement des matériels ou filtres absents.');
           }
-          if (!app.includes('function stockByUnit()') || !app.includes('unités distinctes') || !app.includes('m.threshold??db.threshold')) {
+          if (!app.includes('function stockByUnit()') || !app.includes('Stock disponible par unité') || !app.includes('totalByUnit') || !app.includes('m.threshold??db.threshold')) {
             throw new Error('Synthèse des stocks par unité ou seuil zéro non géré.');
+          }
+          if (!app.includes('balances.some(x=>!Number.isFinite(Number(x.quantity))||Number(x.quantity)<0)') || !app.includes('Math.abs(aggregate-balanceTotal)>0.0001')) {
+            throw new Error('Une écriture pourrait écraser une quantité invalide ou une ventilation incohérente.');
+          }
+          if (!app.includes('balance.locationId') || !app.includes('Emplacement non identifié') || !app.includes('quantity:resolved?resolved.name')) {
+            throw new Error('Les emplacements inconnus ou quantités historiques ne sont pas préservés.');
           }
           if (!app.includes('if(storageLoadError)') || !app.includes('Aucune écriture ne sera autorisée')) {
             throw new Error('Protection contre l’écrasement de données locales illisibles absente.');
@@ -104,5 +110,45 @@ jobs:
           if (!html.includes('offline-storage.js') || !html.includes('offline-bootstrap.js')) {
             throw new Error('Initialisation du stockage hors connexion absente.');
           }
+          // Tests arithmétiques sur les fonctions réellement utilisées par l'application.
+          const functionSource = name => {
+            const start = app.indexOf('function ' + name + '(');
+            if (start < 0) throw new Error('Fonction de calcul absente : ' + name);
+            let end = app.indexOf('\\nfunction ', start + 10);
+            if (end < 0) end = app.length;
+            return app.slice(start, end);
+          };
+          const engineSource = ['stockLocation','ensureStockBalances','stockAt','changeStock','stockByUnit','totalStock']
+            .map(functionSource).join('\\n');
+          const createEngine = new Function('db','id',engineSource + '\\nreturn {stockAt,changeStock,stockByUnit,totalStock};');
+          const testDb = {sites:[{id:'koloma-id',name:'Koloma'}],materials:[]};
+          const engine = createEngine(testDb,()=> 'TEST-ID');
+          const cement = {id:'cement',name:'Ciment test',unit:'Sacs',quantity:77,location:'Koloma'};
+          testDb.materials.push(cement);
+          const opening = engine.stockAt(cement,'koloma-id');
+          for (const amount of [100,60,-23,-20]) {
+            if (!engine.changeStock(cement,'koloma-id',amount)) throw new Error('Opération de stock refusée à tort : ' + amount);
+          }
+          if (opening !== 77 || engine.stockAt(cement,'koloma-id') !== 194 || cement.quantity !== 194) {
+            throw new Error('Échec du calcul ouverture + réceptions - sorties = 194 sacs.');
+          }
+          const transfer = {id:'transfer',name:'Peinture',unit:'Litre',quantity:50,stockBalances:[{locationId:'central',locationName:'Magasin central',quantity:50}]};
+          if (!engine.changeStock(transfer,'central',-20) || !engine.changeStock(transfer,'koloma-id',20)) throw new Error('Transfert central vers chantier refusé.');
+          if (engine.stockAt(transfer,'central') !== 30 || engine.stockAt(transfer,'koloma-id') !== 20 || transfer.quantity !== 50) throw new Error('Le transfert doit conserver le stock total.');
+          if (!engine.changeStock(transfer,'koloma-id',-5) || !engine.changeStock(transfer,'central',5)) throw new Error('Retour chantier vers magasin refusé.');
+          if (engine.stockAt(transfer,'central') !== 35 || engine.stockAt(transfer,'koloma-id') !== 15 || transfer.quantity !== 50) throw new Error('Le retour doit conserver le stock total.');
+          const damaged = {id:'damaged',name:'Donnée invalide',unit:'Sacs',quantity:-3,stockBalances:[{locationId:'koloma-id',locationName:'Koloma',quantity:-3}]};
+          const beforeDamaged = JSON.stringify(damaged);
+          if (engine.changeStock(damaged,'koloma-id',5) !== false || JSON.stringify(damaged) !== beforeDamaged) throw new Error('Une quantité invalide doit être préservée et bloquer les écritures.');
+          const orphan = {id:'orphan',name:'Ancien chantier',unit:'Sacs',quantity:5,stockBalances:[{locationId:'deleted-site-id',locationName:'Ancien chantier',quantity:5}]};
+          engine.stockAt(orphan,'__unallocated__');
+          if (orphan.stockBalances[0].locationId !== 'deleted-site-id') throw new Error('Un ancien identifiant de chantier ne doit pas être réaffecté automatiquement.');
+          const mismatch = {id:'mismatch',name:'Écart',unit:'Sacs',quantity:9,stockBalances:[{locationId:'koloma-id',locationName:'Koloma',quantity:8}]};
+          if (engine.changeStock(mismatch,'koloma-id',1) !== false || mismatch.quantity !== 9) throw new Error('Une ventilation incohérente doit bloquer les écritures.');
+          const drill = {id:'drill',name:'Perceuse',unit:'pièce',quantity:7,location:'Koloma'};
+          testDb.materials.push(drill);
+          const totals = engine.stockByUnit();
+          if (totals.Sacs !== 194 || totals['pièce'] !== 7) throw new Error('Les unités de stock doivent rester séparées.');
+          console.log('OK : tests arithmétiques, transferts, retours, unités et protection des données.');
           console.log('OK : syntaxe, ressources locales, précache et manifeste.');
           NODE
