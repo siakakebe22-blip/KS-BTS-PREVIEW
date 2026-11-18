@@ -40,7 +40,7 @@ jobs:
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
           }
-          if (!sw.includes('ks-btp-demo-offline-v17') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+          if (!sw.includes('ks-btp-demo-offline-v18') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
             throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
           }
           if (!bootstrap.includes('await import("./app.js")')) {
@@ -78,6 +78,12 @@ jobs:
           }
           if (!app.includes('function sitesPage(el)') || !app.includes('Matériels présents') || !app.includes('site-overview') || !app.includes('siteStatusFilter') || !app.includes('siteSearch') || !app.includes('grouped=new Map()')) {
             throw new Error('Page chantiers structurée, regroupement des matériels ou filtres absents.');
+          }
+          if (!app.includes('function siteMaterialFlow(site,material)') || !app.includes('consumed=sum(consumedDocs)') || !app.includes('received=sum(receivedDocs)') || !app.includes('returned=sum(returnedDocs)') || !app.includes('Consommé :')) {
+            throw new Error('Suivi chantier réceptionné-consommé-retourné-disponible absent.');
+          }
+          if (!app.includes('const consumedDocs=docs.filter(d=>d.type==="Sortie")') || !app.includes('Document "+ref')) {
+            throw new Error('Les bons de sortie doivent être des consommations sans double comptage des mouvements liés.');
           }
           if (!app.includes('function stockByUnit()') || !app.includes('Stock disponible par unité') || !app.includes('totalByUnit') || !app.includes('m.threshold??db.threshold')) {
             throw new Error('Synthèse des stocks par unité ou seuil zéro non géré.');
@@ -152,6 +158,22 @@ jobs:
           testDb.materials.push(drill);
           const totals = engine.stockByUnit();
           if (totals.Sacs !== 194 || totals['pièce'] !== 7) throw new Error('Les unités de stock doivent rester séparées.');
-          console.log('OK : tests arithmétiques, transferts, retours, unités et protection des données.');
+          const flowSource=functionSource('siteMaterialFlow');
+          const flowDb={sites:[{id:'koloma-id',name:'Koloma'}],documents:[
+            {ref:'BON-REC-1',type:'Réception',materialId:'flow-mat',site:'Koloma',quantity:100},
+            {ref:'BON-SOR-1',type:'Sortie',materialId:'flow-mat',site:'Koloma',quantity:23},
+            {ref:'BON-RET-1',type:'Retour',materialId:'flow-mat',site:'Koloma',quantity:5}
+          ],movements:[
+            {type:'réception',materialId:'flow-mat',location:'Koloma',quantity:100,note:'Document BON-REC-1'},
+            {type:'sortie',materialId:'flow-mat',location:'Koloma',quantity:23,note:'Document BON-SOR-1'},
+            {type:'retour',materialId:'flow-mat',location:'Koloma',quantity:5,note:'Document BON-RET-1'},
+            {type:'sortie',materialId:'flow-mat',location:'Koloma',destination:'koloma-id',quantity:10,note:'Transfert manuel'},
+            {type:'consommation',materialId:'flow-mat',location:'Koloma',source:'koloma-id',quantity:2,note:'Utilisation'}
+          ]};
+          const flowMaterial={id:'flow-mat',name:'Ciment',unit:'Sacs',quantity:157,stockBalances:[{locationId:'koloma-id',locationName:'Koloma',quantity:157}]};
+          const siteMaterialFlowTest=new Function('db','stockAt',flowSource+';return siteMaterialFlow;')(flowDb,(m,site)=>m.stockBalances.filter(b=>b.locationId===site).reduce((n,b)=>n+b.quantity,0));
+          const flow=siteMaterialFlowTest(flowDb.sites[0],flowMaterial);
+          if(flow.received!==110||flow.consumed!==25||flow.returned!==5||flow.available!==157||flow.opening!==77) throw new Error('Échec du calcul du suivi chantier : les bons liés doivent être comptés une seule fois.');
+          console.log('OK : tests arithmétiques, transferts, retours, unités, suivi chantier et protection des données.');
           console.log('OK : syntaxe, ressources locales, précache et manifeste.');
           NODE
