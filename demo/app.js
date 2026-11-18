@@ -102,10 +102,10 @@ function openVoucherForm(type){
   $("#voucherExistingMaterial").innerHTML='<option value="">＋ Nouveau matériel à enregistrer</option>'+db.materials.map(m=>`<option value="${m.id}">${esc(m.ref)} — ${esc(m.name)} (stock : ${m.quantity} ${esc(m.unit)})</option>`).join("");
   $("#voucherMaterial").innerHTML=db.materials.map(m=>`<option value="${m.id}">${esc(m.ref)} — ${esc(m.name)} (stock : ${m.quantity} ${esc(m.unit)})</option>`).join("");
   $("#voucherSite").innerHTML=db.sites.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
-  $("#receiptLocation").innerHTML='<option value="central">Magasin central</option>'+db.sites.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+  $("#receiptLocation").innerHTML=db.sites.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
   $("#voucherQuantity").value=1;
   $("#voucherQuantity").removeAttribute("max");
-  const updateVoucherLimit=()=>{const material=db.materials.find(x=>x.id===$("#voucherMaterial").value);const site=$("#voucherSite").value;const limit=type==="Sortie"?(material?stockAt(material,"central")+unallocatedStock(material):0):(type==="Retour"&&material&&site?stockAt(material,site):"");$("#voucherQuantity").max=limit===""?"":String(limit)};
+  const updateVoucherLimit=()=>{const material=db.materials.find(x=>x.id===$("#voucherMaterial").value);const site=$("#voucherSite").value;const limit=(type==="Sortie"||type==="Retour")&&material&&site?stockAt(material,site):"";$("#voucherQuantity").max=limit===""?"":String(limit)};
   $("#voucherMaterial").onchange=updateVoucherLimit;$("#voucherSite").onchange=updateVoucherLimit;updateVoucherLimit();
   $("#voucherSiteLabel").textContent=type==="Sortie"?"Chantier destinataire":"Chantier d'origine";
   $("#purchaseDate").value=new Date().toISOString().slice(0,10);
@@ -117,7 +117,7 @@ function openVoucherForm(type){
   $("#receiptType").value="equipment";
   $("#receiptUnit").value="pièce";
   $("#receiptThreshold").value=db.threshold;
-  $("#receiptLocation").value="central";
+  $("#receiptLocation").value=db.sites[0]?.id||"";
   $("#purchaseSupplier").value="";
   $("#purchaseInvoice").value="";
   $("#voucherExistingMaterial").onchange=()=>{$("#newReceiptMaterialFields").hidden=!!$("#voucherExistingMaterial").value};
@@ -142,7 +142,8 @@ function submitVoucher(e){
     }
     const unitPrice=Number($("#purchaseUnitPrice").value||0);
     purchase={id:id(),date:$("#purchaseDate").value||new Date().toISOString().slice(0,10),supplier:$("#purchaseSupplier").value.trim(),invoice:$("#purchaseInvoice").value.trim(),quantity,unitPrice,total:quantity*unitPrice,currency:db.currency,storage:$("#receiptLocation").selectedOptions[0]?.textContent||"Magasin central"};
-    const storage=$("#receiptLocation").value||"central";
+    const storage=$("#receiptLocation").value;
+    if(!storage||!db.sites.some(x=>x.id===storage)){alert("Choisissez le chantier qui réceptionne le matériel.");return}
     changeStock(m,storage,quantity);
     m.location=storage;
     m.purchaseHistory=m.purchaseHistory||[];m.purchaseHistory.push(purchase);
@@ -153,19 +154,16 @@ function submitVoucher(e){
     const selectedSite=$("#voucherSite").value;
     if(!selectedSite||!db.sites.some(x=>x.id===selectedSite)){alert("Créez ou choisissez un chantier valide.");return}
     if(type==="Sortie"){
-      const available=stockAt(m,"central")+unallocatedStock(m);
-      if(quantity>available){alert("Stock insuffisant au magasin central et dans le stock historique non réparti.");return}
-      let remaining=quantity;const takeCentral=Math.min(stockAt(m,"central"),remaining);
-      if(takeCentral){changeStock(m,"central",-takeCentral);remaining-=takeCentral}
-      if(remaining>0)changeStock(m,"__unallocated__",-remaining);
-      changeStock(m,selectedSite,quantity);
+      const available=stockAt(m,selectedSite);
+      if(quantity>available){alert("Stock insuffisant sur le chantier sélectionné. Disponible : "+available+" "+m.unit+".");return}
+      if(!changeStock(m,selectedSite,-quantity)){alert("Impossible de débiter le stock du chantier.");return}
     }else{
       if(quantity>stockAt(m,selectedSite)){alert("Stock insuffisant sur ce chantier pour effectuer le retour.");return}
       changeStock(m,selectedSite,-quantity);changeStock(m,"central",quantity);
     }
   }
   db.documents=db.documents||[];
-  const d={id:id(),ref:nextVoucherRef(type),date:new Date().toISOString(),type,materialId:m.id,materialRef:m.ref,materialName:m.name,category:m.category,quantity,unit:m.unit,site:type==="Réception"?$("#receiptLocation").selectedOptions[0]?.textContent:$("#voucherSite").selectedOptions[0]?.textContent,source:type==="Sortie"?"Magasin central / stock historique":(type==="Retour"?$("#voucherSite").selectedOptions[0]?.textContent:"Fournisseur"),destination:type==="Réception"?$("#receiptLocation").selectedOptions[0]?.textContent:$("#voucherSite").selectedOptions[0]?.textContent,recipient:$("#voucherRecipient").value.trim(),note:$("#voucherNote").value.trim(),purchase};
+  const d={id:id(),ref:nextVoucherRef(type),date:new Date().toISOString(),type,materialId:m.id,materialRef:m.ref,materialName:m.name,category:m.category,quantity,unit:m.unit,site:type==="Réception"?$("#receiptLocation").selectedOptions[0]?.textContent:$("#voucherSite").selectedOptions[0]?.textContent,source:type==="Sortie"?$("#voucherSite").selectedOptions[0]?.textContent:(type==="Retour"?$("#voucherSite").selectedOptions[0]?.textContent:"Fournisseur"),destination:type==="Réception"?$("#receiptLocation").selectedOptions[0]?.textContent:(type==="Sortie"?"Sortie / utilisation":"Magasin central"),recipient:$("#voucherRecipient").value.trim(),note:$("#voucherNote").value.trim(),purchase};
   if(type==="Réception"){d.supplier=purchase.supplier;d.invoice=purchase.invoice;d.purchaseDate=purchase.date;d.unitPrice=purchase.unitPrice;d.totalPurchase=purchase.total}
   db.documents.push(d);
   db.movements.push({id:id(),date:d.date,type:type.toLowerCase(),materialId:m.id,materialName:m.name,quantity,location:d.site,source:d.source,destination:d.destination,note:"Document "+d.ref+(purchase?" · Fournisseur : "+purchase.supplier:"")});
