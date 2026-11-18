@@ -1,4 +1,4 @@
-const CACHE="ks-btp-demo-offline-v28";
+const CACHE="ks-btp-demo-offline-v29";
 const ASSETS=["./","./index.html","./style.css","./app.js","./offline-storage.js","./offline-bootstrap.js","./manifest.webmanifest","./icon.svg"];
 
 self.addEventListener("install",event=>{
