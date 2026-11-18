@@ -112,7 +112,18 @@ function openVoucherForm(type){
   $("#receiptLocation").innerHTML=db.sites.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
   $("#voucherQuantity").value=1;
   $("#voucherQuantity").removeAttribute("max");
-  const updateVoucherLimit=()=>{const material=db.materials.find(x=>x.id===$("#voucherMaterial").value);const site=$("#voucherSite").value;const limit=(type==="Sortie"||type==="Retour")&&material&&site?stockAt(material,site):"";$("#voucherQuantity").max=limit===""?"":String(limit)};
+  const updateVoucherLimit=()=>{
+    const material=db.materials.find(x=>x.id===$("#voucherMaterial").value);
+    const siteId=$("#voucherSite").value;
+    const site=db.sites.find(x=>x.id===siteId);
+    const tracksSiteStock=type==="Sortie"||type==="Retour";
+    if(!tracksSiteStock){$("#voucherQuantity").removeAttribute("max");$("#voucherStockAvailable").textContent="";return}
+    if(!material||!site){$("#voucherQuantity").removeAttribute("max");$("#voucherStockAvailable").textContent="Sélectionnez un matériel et un chantier pour connaître le stock disponible.";return}
+    const available=stockAt(material,siteId);
+    $("#voucherQuantity").max=String(available);
+    $("#voucherStockAvailable").textContent="Stock disponible sur "+site.name+" : "+available+" "+material.unit+".";
+    $("#voucherStockAvailable").dataset.available=String(available);
+  };
   $("#voucherMaterial").onchange=updateVoucherLimit;$("#voucherSite").onchange=updateVoucherLimit;updateVoucherLimit();
   $("#voucherSiteLabel").textContent=type==="Sortie"?"Chantier concerné / lieu de sortie":"Chantier d'origine";
   $("#purchaseDate").value=new Date().toISOString().slice(0,10);
