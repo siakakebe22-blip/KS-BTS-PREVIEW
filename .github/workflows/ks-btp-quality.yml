@@ -36,6 +36,7 @@ jobs:
           const html = fs.readFileSync('demo/index.html', 'utf8');
           const sw = fs.readFileSync('demo/sw.js', 'utf8');
           const app = fs.readFileSync('demo/app.js', 'utf8');
+          const css = fs.readFileSync('demo/style.css', 'utf8');
           const bootstrap = fs.readFileSync('demo/offline-bootstrap.js', 'utf8');
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
