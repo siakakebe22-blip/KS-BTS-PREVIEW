@@ -10,7 +10,7 @@ let saveQueue=Promise.resolve();
 function save(){
   let snapshot;
   try{snapshot=JSON.stringify(db);localStorage.setItem(KEY,snapshot)}
-  catch(error){window.dispatchEvent(new CustomEvent("ks-offline-save-error",{detail:error.message||"Écriture locale impossible."}));return Promise.reject(error)}
+  catch(error){window.dispatchEvent(new CustomEvent("ks-offline-save-error",{detail:error.message||"Écriture locale impossible."}));return Promise.resolve(false)}
   if(!window.KSBtpOfflineStorage?.saveSnapshot){window.dispatchEvent(new CustomEvent("ks-offline-saved"));return Promise.resolve(true)}
   saveQueue=saveQueue.catch(()=>{}).then(()=>window.KSBtpOfflineStorage.saveSnapshot(JSON.parse(snapshot)));
   return saveQueue.then(()=>{window.dispatchEvent(new CustomEvent("ks-offline-saved"));return true}).catch(error=>{
