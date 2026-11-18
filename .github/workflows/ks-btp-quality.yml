@@ -41,7 +41,7 @@ jobs:
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
           }
-          if (!sw.includes('ks-btp-demo-offline-v27') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+          if (!sw.includes('ks-btp-demo-offline-v28') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
             throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
           }
           if (!bootstrap.includes('await import("./app.js")')) {
@@ -107,6 +107,7 @@ jobs:
           if (!app.includes('if(storageLoadError)') || !app.includes('Aucune écriture ne sera autorisée')) {
             throw new Error('Protection contre l’écrasement de données locales illisibles absente.');
           }
+          if (!app.includes('const hasRemainingStock=Number(itemToDelete?.quantity)>0') || !app.includes('stockBalances||[]).some(balance=>Number(balance.quantity)>0')) { throw new Error('Protection contre la suppression d’un matériel encore en stock absente.'); }
           if (!app.includes('logAction("Suppression","Chantier"') || !app.includes('logAction("Suppression","Matériel"') || !app.includes('logAction("Suppression","Maintenance"')) {
             throw new Error('Traçabilité des suppressions absente.');
           }
