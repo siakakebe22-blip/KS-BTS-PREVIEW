@@ -27,12 +27,12 @@ function save(){
   if(storageLoadError){window.dispatchEvent(new CustomEvent("ks-offline-save-error",{detail:storageLoadError}));return Promise.resolve(false)}
   let snapshot;
   try{snapshot=JSON.stringify(db);localStorage.setItem(KEY,snapshot)}
-  catch(error){window.dispatchEvent(new CustomEvent("ks-offline-save-error",{detail:error.message||"Écriture locale impossible."}));return Promise.resolve(false)}
+  catch(error){window.dispatchEvent(new CustomEvent("ks-offline-save-error",{detail:"STOCKAGE PRINCIPAL : "+(error.message||"Écriture locale impossible.")}));return Promise.resolve(false)}
   if(!window.KSBtpOfflineStorage?.saveSnapshot){window.dispatchEvent(new CustomEvent("ks-offline-saved"));return Promise.resolve(true)}
   saveQueue=saveQueue.catch(()=>{}).then(()=>window.KSBtpOfflineStorage.saveSnapshot(JSON.parse(snapshot)));
   return saveQueue.then(()=>{window.dispatchEvent(new CustomEvent("ks-offline-saved"));return true}).catch(error=>{
     console.error(error);
-    window.dispatchEvent(new CustomEvent("ks-offline-save-error",{detail:error.message||"Sauvegarde IndexedDB impossible."}));
+    window.dispatchEvent(new CustomEvent("ks-offline-save-error",{detail:"SAUVEGARDE DE SÉCURITÉ : les données ont déjà été enregistrées dans le stockage principal de cet appareil, mais la copie secondaire IndexedDB n’a pas été mise à jour. "+(error.message||"Sauvegarde IndexedDB impossible.")}));
     return false;
   });
 }
