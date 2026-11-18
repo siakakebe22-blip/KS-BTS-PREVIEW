@@ -19,6 +19,14 @@ function save(){
     return false;
   });
 }
+function nextVoucherRef(type){
+  const prefix="BON-"+String(type||"").toUpperCase().slice(0,3);
+  const max=(db.documents||[]).reduce((n,d)=>{
+    const match=new RegExp("^"+prefix.replace(/[.*+?^${}()|[\]\\]/g,"\\function nextMaterialRef(){")+"-(\\d+)$").exec(String(d.ref||""));
+    return match?Math.max(n,Number(match[1])):n;
+  },0);
+  return prefix+"-"+String(max+1).padStart(4,"0");
+}
 function nextMaterialRef(){
   const max=db.materials.reduce((n,m)=>{const match=/^MAT-(\d+)$/.exec(String(m.ref||""));return match?Math.max(n,Number(match[1])):n},0);
   return "MAT-"+String(max+1).padStart(4,"0");
@@ -97,7 +105,7 @@ function submitVoucher(e){
     if(type==="Sortie")m.quantity=Number(m.quantity)-quantity;else m.quantity=Number(m.quantity)+quantity;
   }
   db.documents=db.documents||[];
-  const d={id:id(),ref:"BON-"+type.toUpperCase().slice(0,3)+"-"+String(db.documents.length+1).padStart(4,"0"),date:new Date().toISOString(),type,materialId:m.id,materialRef:m.ref,materialName:m.name,category:m.category,quantity,unit:m.unit,site:type==="Réception"?$("#receiptLocation").value:$("#voucherSite").value,recipient:$("#voucherRecipient").value.trim(),note:$("#voucherNote").value.trim(),purchase};
+  const d={id:id(),ref:nextVoucherRef(type),date:new Date().toISOString(),type,materialId:m.id,materialRef:m.ref,materialName:m.name,category:m.category,quantity,unit:m.unit,site:type==="Réception"?$("#receiptLocation").value:$("#voucherSite").value,recipient:$("#voucherRecipient").value.trim(),note:$("#voucherNote").value.trim(),purchase};
   if(type==="Réception"){d.supplier=purchase.supplier;d.invoice=purchase.invoice;d.purchaseDate=purchase.date;d.unitPrice=purchase.unitPrice;d.totalPurchase=purchase.total}
   db.documents.push(d);
   db.movements.push({id:id(),date:d.date,type:type.toLowerCase(),materialId:m.id,materialName:m.name,quantity,location:d.site,note:"Document "+d.ref+(purchase?" · Fournisseur : "+purchase.supplier:"")});
