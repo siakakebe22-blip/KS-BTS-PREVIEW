@@ -129,7 +129,7 @@
         <label>Statut<select id="maintenanceStatus" required><option>À traiter</option><option>En cours</option><option>Terminée</option></select></label>
       </div>
       <label>Description de la panne / intervention<textarea id="maintenanceDescription" rows="3" maxlength="500" required placeholder="Décrivez la panne ou le travail effectué"></textarea></label>
-      <label>Coût de l'intervention (GNF)<input id="maintenanceCost" type="number" min="0" step="1" value="0" required></label>
+      <label>Coût de l'intervention (<span id="maintenanceCurrency">GNF</span>)<input id="maintenanceCost" type="number" min="0" step="1" value="0" required></label>
       <div class="dialog-actions"><button type="button" class="button secondary" id="cancelMaintenance">Annuler</button><button type="submit" class="button primary">Enregistrer l'intervention</button></div>
     </form>
   </dialog>
