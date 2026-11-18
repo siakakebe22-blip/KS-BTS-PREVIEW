@@ -207,7 +207,7 @@ $("#itemForm").addEventListener("submit",e=>{e.preventDefault();const old=db.mat
 $("#closeDialog").onclick=closeItem;$("#cancelDialog").onclick=closeItem;$("#menuToggle").onclick=()=>$("#sidebar").classList.toggle("open");
 document.addEventListener("change",e=>{if(e.target.id==="restoreFile"&&e.target.files[0]){const reader=new FileReader();reader.onload=()=>{try{const value=JSON.parse(reader.result);if(!value||!Array.isArray(value.materials))throw Error();if(confirm("Remplacer les données locales par cette sauvegarde ?")){db={...initial,...value};save();render();alert("Sauvegarde restaurée.")}}catch{alert("Fichier de sauvegarde invalide.")}};reader.readAsText(e.target.files[0])}});
 $("#todayLabel").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-// Vérification des mises à jour : les fichiers sont téléchargés uniquement avec Internet.
+// Enregistrement du service worker même si le démarrage différé a dépassé l'événement load.
 if("serviceWorker" in navigator && location.protocol!=="file:"){
   let updateAccepted=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{
@@ -223,9 +223,10 @@ if("serviceWorker" in navigator && location.protocol!=="file:"){
       waiting.postMessage({type:"SKIP_WAITING"});
     }
   };
-  window.addEventListener("load",async()=>{
+  const registerOfflineSupport=async()=>{
     try{
       const registration=await navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"});
+      await navigator.serviceWorker.ready;
       offerUpdate(registration);
       registration.addEventListener("updatefound",()=>{
         const installing=registration.installing;
@@ -236,8 +237,10 @@ if("serviceWorker" in navigator && location.protocol!=="file:"){
       });
       if(navigator.onLine)registration.update().catch(()=>{});
       window.addEventListener("online",()=>registration.update().catch(()=>{}));
-    }catch(error){console.warn("Vérification des mises à jour indisponible",error);}
-  });
+    }catch(error){console.warn("Activation du mode hors connexion impossible",error);}
+  };
+  if(document.readyState==="complete")registerOfflineSupport();
+  else window.addEventListener("load",registerOfflineSupport,{once:true});
 }
 go("dashboard");
 export {go};
