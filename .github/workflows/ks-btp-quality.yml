@@ -40,7 +40,7 @@ jobs:
           if (!app.includes('document.readyState==="complete"') || !app.includes('registerOfflineSupport()')) {
             throw new Error('Enregistrement du service worker non protégé contre un événement load déjà passé.');
           }
-          if (!sw.includes('ks-btp-demo-offline-v18') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
+          if (!sw.includes('ks-btp-demo-offline-v19') || !sw.includes('new URL("./index.html",self.registration.scope).href')) {
             throw new Error('Repli de navigation hors connexion absent ou version de cache incorrecte.');
           }
           if (!bootstrap.includes('await import("./app.js")')) {
@@ -57,6 +57,9 @@ jobs:
           }
           if (!html.includes('id="voucherStockAvailable"') || !app.includes('Stock disponible sur ') || !app.includes('$("#voucherStockAvailable").textContent')) {
             throw new Error('Affichage dynamique du stock disponible dans le bon absent.');
+          }
+          if (!app.includes('function printGeneralReport()') || !app.includes('data-action="print-general-report"') || !app.includes('RAPPORT GÉNÉRAL DE GESTION') || !app.includes('SITUATION DES CHANTIERS') || !app.includes('BONS DE STOCK') || !app.includes('JOURNAL DES ACTIVITÉS')) {
+            throw new Error('Téléchargement du rapport général PDF ou ses rubriques essentielles absent.');
           }
           if (!html.includes('data-page="activity"') || !app.includes('function logAction(') || !app.includes('function activityPage(') || !app.includes('function printActivityLog(') || !app.includes('Enregistrer en PDF') || !app.includes('activityLog:[]')) {
             throw new Error('Journal automatique ou impression PDF absente.');
