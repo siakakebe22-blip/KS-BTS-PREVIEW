@@ -309,26 +309,46 @@ function settingsPage(el){el.innerHTML=`<div class="welcome"><div><h2>Paramètre
 function openItem(item){$("#itemForm").reset();$("#itemId").value=item?.id||"";$("#dialogTitle").textContent=item?"Modifier le matériel":"Ajouter un matériel";$("#itemName").value=item?.name||"";$("#itemCategory").value=item?.category||"Maçonnerie";$("#itemType").value=item?.type||"equipment";$("#itemQuantity").value=item?.quantity??0;$("#itemUnit").value=item?.unit||"pièce";$("#itemThreshold").value=item?.threshold??db.threshold;$("#itemLocation").innerHTML='<option value="central">Magasin central</option>'+db.sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");$("#itemLocation").value=item?.location||"central";$("#itemDialog").showModal()}
 function closeItem(){$("#itemDialog").close()}
 function addMovement(){
-  if(!db.materials.length){alert("Ajoutez d'abord un matériel.");return}
-  const materialId=prompt("ID du matériel :\n"+db.materials.map(m=>m.id+" — "+m.name).join("\n"));
-  const m=db.materials.find(x=>x.id===materialId);if(!m)return;
-  const type=prompt("Type : entrée, sortie, retour ou consommation","sortie");
-  if(!["entrée","sortie","retour","consommation"].includes(type))return;
-  const qty=Number(prompt("Quantité","1"));if(!Number.isFinite(qty)||qty<=0){alert("Quantité invalide.");return}
-  const choices=db.sites.map(x=>x.id+" — "+x.name).join("\n");
-  let location="central",source="central",destination="central";
+  $("#movementMaterial").innerHTML='<option value="">Choisir un matériel</option>'+db.materials.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.ref)+' — '+esc(m.name)+' ('+m.quantity+' '+esc(m.unit)+')</option>').join("");
+  $("#movementSite").innerHTML='<option value="">Choisir un chantier</option>'+db.sites.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join("");
+  $("#movementType").value="entrée"; $("#movementQuantity").value="1"; $("#movementNote").value="";
+  updateMovementForm(); $("#movementDialog").showModal();
+}
+function updateMovementForm(){
+  const type=$("#movementType").value,needsSite=type==="sortie"||type==="retour"||type==="consommation";
+  $("#movementSiteFields").hidden=!needsSite; $("#movementSite").required=needsSite;
+  $("#movementSiteLabel").textContent=type==="sortie"?"Chantier destinataire":"Chantier concerné";
+  const material=db.materials.find(m=>m.id===$("#movementMaterial").value),siteId=$("#movementSite").value;
+  let message="Pour une entrée, la quantité sera ajoutée au magasin central.";
+  if(material&&type==="sortie")message="Stock mobilisable au magasin central : "+(stockAt(material,"central")+unallocatedStock(material))+" "+material.unit+".";
+  if(material&&(type==="retour"||type==="consommation")){const site=db.sites.find(s=>s.id===siteId);message=site?"Stock disponible sur "+site.name+" : "+stockAt(material,siteId)+" "+material.unit+".":"Sélectionnez un chantier pour consulter son stock.";}
+  $("#movementStockInfo").textContent=message;
+}
+function closeMovement(){ $("#movementDialog").close() }
+function submitMovement(e){
+  e.preventDefault();
+  const type=$("#movementType").value,m=db.materials.find(x=>x.id===$("#movementMaterial").value),qty=Number($("#movementQuantity").value),siteId=$("#movementSite").value;
+  if(!m){alert("Choisissez un matériel dans la liste.");return}
+  if(!Number.isFinite(qty)||qty<=0){alert("Saisissez une quantité strictement supérieure à zéro.");return}
+  let location="Magasin central",source="central",destination="central";
   if(type==="sortie"){
-    const siteId=prompt("ID du chantier destinataire :\n"+choices);if(!db.sites.some(x=>x.id===siteId))return;
-    const available=stockAt(m,"central")+unallocatedStock(m);if(qty>available){alert("Stock insuffisant au magasin central et dans le stock historique.");return}
-    let remain=qty,take=Math.min(stockAt(m,"central"),qty);if(take){changeStock(m,"central",-take);remain-=take}if(remain)changeStock(m,"__unallocated__",-remain);
-    changeStock(m,siteId,qty);location=db.sites.find(x=>x.id===siteId).name;destination=siteId;
+    if(!db.sites.some(s=>s.id===siteId)){alert("Choisissez le chantier destinataire.");return}
+    const available=stockAt(m,"central")+unallocatedStock(m);if(qty>available){alert("Stock insuffisant au magasin central. Disponible : "+available+" "+m.unit+".");return}
+    let remain=qty,take=Math.min(stockAt(m,"central"),qty);if(take&&!changeStock(m,"central",-take)){alert("Impossible de débiter le magasin central.");return}remain-=take;
+    if(remain&&!changeStock(m,"__unallocated__",-remain)){alert("Impossible de débiter le stock historique.");return}
+    if(!changeStock(m,siteId,qty)){alert("Impossible d\'ajouter le matériel au chantier.");return}
+    location=db.sites.find(s=>s.id===siteId).name;destination=siteId;
   }else if(type==="retour"||type==="consommation"){
-    const siteId=prompt("ID du chantier concerné :\n"+choices);if(!db.sites.some(x=>x.id===siteId))return;
-    if(qty>stockAt(m,siteId)){alert("Stock insuffisant sur ce chantier.");return}
-    changeStock(m,siteId,-qty);location=db.sites.find(x=>x.id===siteId).name;source=siteId;
-    if(type==="retour")changeStock(m,"central",qty);else destination="consommé";
-  }else{changeStock(m,"central",qty)}
-  db.movements.push({id:id(),date:new Date().toISOString(),type,materialId:m.id,materialName:m.name,quantity:qty,location,source,destination,note:""});save();render();
+    if(!db.sites.some(s=>s.id===siteId)){alert("Choisissez le chantier concerné.");return}
+    const available=stockAt(m,siteId);if(qty>available){alert("Stock insuffisant sur ce chantier. Disponible : "+available+" "+m.unit+".");return}
+    if(!changeStock(m,siteId,-qty)){alert("Impossible de débiter le stock du chantier.");return}
+    location=db.sites.find(s=>s.id===siteId).name;source=siteId;
+    if(type==="retour"&&!changeStock(m,"central",qty)){alert("Impossible d\'enregistrer le retour au magasin central.");return}
+    if(type==="consommation")destination="consommé";
+  }else if(type==="entrée"){if(!changeStock(m,"central",qty)){alert("Impossible d\'ajouter la quantité au magasin central.");return}}
+  else{alert("Type de mouvement non reconnu.");return}
+  db.movements.push({id:id(),date:new Date().toISOString(),type,materialId:m.id,materialName:m.name,quantity:qty,location,source,destination,note:$("#movementNote").value.trim()});
+  save();closeMovement();render();
 }
 function exportCsv(){const rows=[["Référence","Désignation","Catégorie","Type","Quantité","Unité","Emplacement"],...db.materials.map(m=>[m.ref,m.name,m.category,m.type,m.quantity,m.unit,m.location])];const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\n");download("ks-btp-materiels.csv",csv,"text/csv;charset=utf-8")}
 function download(name,data,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
@@ -343,7 +363,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");
   if(used){alert("Suppression impossible : ce chantier est référencé dans le stock ou l'historique.");return}
   if(confirm("Supprimer ce chantier ?")){db.sites=db.sites.filter(s=>s.id!==mid);save();render()}
 }if(act==="add-movement")addMovement();if(act==="open-voucher")openVoucherForm(b.dataset.type);if(act==="print-voucher"){const d=(db.documents||[]).find(x=>x.id===mid);if(d)printVoucher(d)}if(act==="add-maintenance")openMaintenance();if(act==="edit-maintenance")openMaintenance(db.maintenance.find(x=>x.id===mid));if(act==="delete-maintenance"){if(confirm("Supprimer cette intervention de maintenance ?")){db.maintenance=db.maintenance.filter(x=>x.id!==mid);save();render()}}if(act==="export-csv")exportCsv();if(act==="backup")download("ks-btp-sauvegarde.json",JSON.stringify(db,null,2),"application/json");if(act==="save-settings"){db.company=$("#companySetting").value.trim()||"KS BTP";db.currency=$("#currencySetting").value;db.threshold=Number($("#thresholdSetting").value)||0;save();alert("Paramètres enregistrés.");render()}});
-$("#voucherForm").addEventListener("submit",submitVoucher);$("#maintenanceForm").addEventListener("submit",submitMaintenance);$("#closeMaintenance").onclick=closeMaintenance;$("#cancelMaintenance").onclick=closeMaintenance;$("#closeVoucher").onclick=closeVoucher;$("#cancelVoucher").onclick=closeVoucher;
+$("#movementForm").addEventListener("submit",submitMovement);$("#movementType").addEventListener("change",updateMovementForm);$("#movementMaterial").addEventListener("change",updateMovementForm);$("#movementSite").addEventListener("change",updateMovementForm);$("#closeMovement").onclick=closeMovement;$("#cancelMovement").onclick=closeMovement;$("#voucherForm").addEventListener("submit",submitVoucher);$("#maintenanceForm").addEventListener("submit",submitMaintenance);$("#closeMaintenance").onclick=closeMaintenance;$("#cancelMaintenance").onclick=closeMaintenance;$("#closeVoucher").onclick=closeVoucher;$("#cancelVoucher").onclick=closeVoucher;
 $("#itemForm").addEventListener("submit",e=>{e.preventDefault();const old=db.materials.find(m=>m.id===$("#itemId").value);if(old&&Number($("#itemQuantity").value)!==Number(old.quantity)){alert("Pour modifier une quantité existante, utilisez un mouvement de stock afin de conserver la traçabilité.");$("#itemQuantity").value=old.quantity;return}const data={id:old?.id||id(),ref:old?.ref||nextMaterialRef(),name:$("#itemName").value.trim(),category:$("#itemCategory").value,type:$("#itemType").value,quantity:Number($("#itemQuantity").value),unit:$("#itemUnit").value.trim(),threshold:Number($("#itemThreshold").value)||0,location:$("#itemLocation").value};if(old)Object.assign(old,data);else db.materials.push(data);save();closeItem();render()});
 $("#closeDialog").onclick=closeItem;$("#cancelDialog").onclick=closeItem;$("#menuToggle").onclick=()=>$("#sidebar").classList.toggle("open");
 function validateBackup(value){
