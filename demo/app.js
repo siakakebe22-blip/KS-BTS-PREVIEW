@@ -43,6 +43,13 @@ function stockLocation(value){
 }
 function ensureStockBalances(item){
   if(Array.isArray(item.stockBalances)){
+    // Normalise les anciennes fiches qui stockaient le nom du chantier à la place de son identifiant.
+    item.stockBalances=item.stockBalances.map(balance=>{
+      const loc=stockLocation(balance.locationId);
+      const named=stockLocation(balance.locationName);
+      const resolved=loc.id!=="__unallocated__"?loc:named;
+      return {...balance,locationId:resolved.id,locationName:resolved.name,quantity:Math.max(0,Number(balance.quantity)||0)};
+    });
     // Répare les fiches anciennes qui possèdent un tableau vide malgré un stock positif.
     if(item.stockBalances.length===0&&Number(item.quantity)>0){
       const loc=stockLocation(item.location);
