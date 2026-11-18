@@ -143,6 +143,25 @@ function render(){const target=$("#pageContent");({dashboard:dashboard,materials
 function dashboard(el){const low=db.materials.filter(m=>Number(m.quantity)<=Number(m.threshold??db.threshold));el.innerHTML=`<div class="welcome"><div><h2>Bienvenue dans KS BTP</h2><p>Suivez vos matériels du magasin central jusqu'aux chantiers.</p></div><div class="quick-actions"><button class="button primary" data-action="add-material">＋ Nouveau matériel</button><button class="button secondary" data-action="open-voucher" data-type="Sortie">Bon de sortie</button><button class="button secondary" data-action="open-voucher" data-type="Réception">Bon de réception</button><button class="button secondary" data-action="open-voucher" data-type="Retour">Bon de retour</button></div></div><div class="stats-grid"><article class="stat-card"><div class="stat-label">Matériels référencés</div><div class="stat-value">${db.materials.length}</div><div class="stat-note">Articles dans l'inventaire</div></article><article class="stat-card"><div class="stat-label">Stock disponible par unité</div><div class="stat-value">${esc(stockSummary())}</div><div class="stat-note">Quantités séparées selon leur unité</div></article><article class="stat-card"><div class="stat-label">Chantiers actifs</div><div class="stat-value">${db.sites.filter(s=>s.status!=="Clôturé").length}</div><div class="stat-note">Sites suivis</div></article><article class="stat-card"><div class="stat-label">Alertes de stock</div><div class="stat-value">${low.length}</div><div class="stat-note">Sous le seuil minimum</div></article></div><div class="panel-grid"><section class="panel"><div class="panel-head"><h3>Alertes de stock</h3><span class="tag ${low.length?"low":"good"}">${low.length} alerte(s)</span></div>${low.length?low.slice(0,6).map(m=>`<div class="list-row"><div><strong>${esc(m.name)}</strong><span class="muted">${esc(m.category)} · Seuil : ${m.threshold}</span></div><span class="tag low">${m.quantity} ${esc(m.unit)}</span></div>`).join(""):'<div class="empty-state">Aucune alerte de stock pour le moment.</div>'}</section><section class="panel"><h3>Derniers mouvements</h3>${db.movements.slice(-5).reverse().map(m=>`<div class="list-row"><div><strong>${esc(m.type)} · ${esc(m.materialName)}</strong><span class="muted">${esc(m.location)} · ${date(m.date)}</span></div><span class="kpi">${m.quantity}</span></div>`).join("")||'<div class="empty-state">Aucun mouvement enregistré.</div>'}</section></div>`}
 function materialsPage(el){el.innerHTML=`<div class="welcome"><div><h2>Inventaire des matériels</h2><p>Référencez les équipements réutilisables et les consommables.</p></div><button class="button primary" data-action="add-material">＋ Ajouter un matériel</button></div><div class="toolbar"><input class="search" id="materialSearch" placeholder="Rechercher par nom ou référence…"><select class="select-filter" id="categoryFilter"><option value="">Toutes les catégories</option>${CATEGORIES.map(c=>`<option>${c}</option>`).join("")}</select></div><div class="table-wrap"><table><thead><tr><th>Référence</th><th>Désignation</th><th>Catégorie</th><th>Type</th><th>Quantité</th><th>Emplacement</th><th>Actions</th></tr></thead><tbody id="materialRows"></tbody></table></div>`;drawMaterials();$("#materialSearch").addEventListener("input",drawMaterials);$("#categoryFilter").addEventListener("change",drawMaterials)}
 function drawMaterials(){const q=($("#materialSearch")?.value||"").toLowerCase(),cat=$("#categoryFilter")?.value||"";const rows=db.materials.filter(m=>(m.name+" "+m.ref).toLowerCase().includes(q)&&(!cat||m.category===cat));rows.forEach(m=>ensureStockBalances(m));$("#materialRows").innerHTML=rows.map(m=>`<tr><td><strong>${esc(m.ref)}</strong></td><td>${esc(m.name)}</td><td>${esc(m.category)}</td><td>${m.type==="consumable"?"Consommable":"Réutilisable"}</td><td><span class="tag ${Number(m.quantity)<=Number(m.threshold)?"low":"good"}">${m.quantity} ${esc(m.unit)}</span></td><td>${esc((m.stockBalances||[]).filter(b=>Number(b.quantity)>0).map(b=>b.locationName+": "+b.quantity).join(", ")||"Stock historique")}</td><td><div class="action-group"><button class="small-button" data-action="edit-material" data-id="${m.id}">Modifier</button><button class="small-button" data-action="delete-material" data-id="${m.id}">Supprimer</button></div></td></tr>`).join("")||'<tr><td colspan="7" class="empty-state">Aucun matériel trouvé.</td></tr>'}
+function siteMaterialFlow(site,material){
+  const sameMaterial=x=>x.materialId===material.id||(!x.materialId&&x.materialName===material.name);
+  const docs=(db.documents||[]).filter(d=>sameMaterial(d)&&d.site===site.name);
+  const refs=new Set(docs.map(d=>String(d.ref||"")).filter(Boolean));
+  const sum=list=>list.reduce((n,x)=>n+Math.max(0,Number(x.quantity)||0),0);
+  const receivedDocs=docs.filter(d=>d.type==="Réception");
+  const consumedDocs=docs.filter(d=>d.type==="Sortie");
+  const returnedDocs=docs.filter(d=>d.type==="Retour");
+  const standalone=(db.movements||[]).filter(m=>{
+    if(!sameMaterial(m))return false;
+    if([...refs].some(ref=>String(m.note||"").startsWith("Document "+ref)))return false;
+    return m.location===site.name||m.source===site.id||m.destination===site.id||m.source===site.name||m.destination===site.name;
+  });
+  const received=sum(receivedDocs)+sum(standalone.filter(m=>m.type==="sortie"&&(m.destination===site.id||m.location===site.name)));
+  const consumed=sum(consumedDocs)+sum(standalone.filter(m=>m.type==="consommation"));
+  const returned=sum(returnedDocs)+sum(standalone.filter(m=>m.type==="retour"));
+  const available=stockAt(material,site.id);
+  return {received,consumed,returned,available,opening:available-received+consumed+returned};
+}
 function sitesPage(el){
   const summarize=items=>{
     const totals=new Map();
@@ -156,14 +175,15 @@ function sitesPage(el){
   const cards=db.sites.map(site=>{
     const grouped=new Map();
     db.materials.forEach(m=>{
-      const quantity=stockAt(m,site.id);
-      if(quantity<=0)return;
+      const flow=siteMaterialFlow(site,m);
+      const quantity=flow.available;
+      if(quantity<=0&&flow.received<=0&&flow.consumed<=0&&flow.returned<=0)return;
       const key=String(m.name||"").trim().toLocaleLowerCase("fr")+"|"+String(m.unit||"unité").trim().toLocaleLowerCase("fr");
-      if(!grouped.has(key))grouped.set(key,{name:m.name,unit:m.unit||"unité",quantity:0,refs:[]});
-      const item=grouped.get(key);item.quantity+=quantity;if(m.ref)item.refs.push(m.ref);
+      if(!grouped.has(key))grouped.set(key,{name:m.name,unit:m.unit||"unité",quantity:0,opening:0,received:0,consumed:0,returned:0,refs:[]});
+      const item=grouped.get(key);item.quantity+=quantity;item.opening+=flow.opening;item.received+=flow.received;item.consumed+=flow.consumed;item.returned+=flow.returned;if(m.ref)item.refs.push(m.ref);
     });
     const lines=[...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,"fr"));
-    const details=lines.length?lines.map(item=>'<div class="site-material-row"><span class="site-material-name">'+esc(item.name)+'<small>'+item.refs.length+' référence(s) : '+esc(item.refs.join(" · "))+'</small></span><strong>'+Number(item.quantity.toFixed(3)).toLocaleString("fr-FR")+' '+esc(item.unit)+'</strong></div>').join(""):'<div class="site-empty-stock">Aucun matériel affecté à ce chantier</div>';
+    const details=lines.length?lines.map(item=>'<div class="site-material-row"><span class="site-material-name">'+esc(item.name)+'<small>'+item.refs.length+' référence(s) : '+esc(item.refs.join(" · "))+'</small><small>Initial : '+Number(item.opening.toFixed(3)).toLocaleString("fr-FR")+' · Réceptionné : '+Number(item.received.toFixed(3)).toLocaleString("fr-FR")+' · Consommé : '+Number(item.consumed.toFixed(3)).toLocaleString("fr-FR")+' · Retourné : '+Number(item.returned.toFixed(3)).toLocaleString("fr-FR")+'</small></span><strong>'+Number(item.quantity.toFixed(3)).toLocaleString("fr-FR")+' '+esc(item.unit)+'<small>Disponible</small></strong></div>').join(""):'<div class="site-empty-stock">Aucun matériel affecté à ce chantier</div>';
     const status=site.status||"Actif";
     return '<article class="site-card"><div class="site-card-head"><div class="site-title-wrap"><span class="site-symbol">⌂</span><div><h3>'+esc(site.name)+'</h3><p>Responsable : '+esc(site.manager||"Non renseigné")+'</p></div></div><span class="tag '+(status==="Clôturé"?"":"good")+'">'+esc(status)+'</span></div><div class="site-section-title">Matériels présents <span>'+lines.length+' désignation(s)</span></div><div class="site-material-list">'+details+'</div><div class="site-card-actions"><span class="site-caption">Suivi du stock par matériel</span><button class="small-button danger" data-action="delete-site" data-id="'+esc(site.id)+'">Supprimer le chantier</button></div></article>';
   }).join("");
