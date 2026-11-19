@@ -22,7 +22,7 @@
 <div class="field"><label for="condition">État du matériel *</label><select id="condition" required><option value="bon">Bon</option><option value="moyen">Moyen</option><option value="à réparer">À réparer</option><option value="hors service">Hors service</option></select><small>Valeurs prévues selon la colonne condition_status de la base actuelle.</small></div>
 <div class="field"><label for="description">Description (facultatif)</label><textarea id="description" maxlength="1000" placeholder="Détails utiles sur le matériel…"></textarea></div>
 <div class="field"><label for="initialQuantity">Quantité initiale (aperçu)</label><input id="initialQuantity" type="number" min="0" step="0.001" value="0"><small>Cette quantité devra ensuite passer par un mouvement d'entrée traçable, jamais par une modification directe du stock.</small></div>
-<div class="field"><label for="locationLabel">Emplacement cloud vérifié</label><select id="locationLabel"><option value="">Choisir un emplacement</option><option value="Stock central">Stock central — dépôt central actif</option></select><small>Liste issue d’une consultation en lecture seule de KS BTP Koloma le 19/11/2026. Elle devra être actualisée avant toute future opération d’enregistrement.</small></div>
+<div id="locationState" class="notice" role="status" aria-live="polite">Chargement des emplacements actifs depuis Supabase…</div><p class="muted" id="companyName">Entreprise : vérification…</p><div class="field"><label for="locationLabel">Emplacement cloud actif *</label><select id="locationLabel" required disabled><option value="">Chargement…</option></select><small>La liste est chargée à chaque ouverture depuis les emplacements autorisés par Supabase. Consultation uniquement.</small></div>
 <div class="field"><label for="threshold">Seuil d'alerte souhaité (aperçu)</label><input id="threshold" type="number" min="0" step="0.001" placeholder="Ex. 5"><small>Le schéma cloud actuel ne contient pas de colonne pour ce seuil : cette valeur reste provisoire et ne sera pas enregistrée.</small></div>
 <label class="inline"><input id="active" type="checkbox" checked> Matériel actif dans le catalogue</label>
 <div class="actions"><button class="btn primary" type="submit">Vérifier les informations</button><button class="btn secondary" type="reset">Effacer le formulaire</button></div>
@@ -38,6 +38,7 @@
 </div>
 <div class="foot">KS BTP · Prévisualisation uniquement · Aucun accès en écriture à Supabase</div>
 </main>
+<script type="module" src="catalogue-cloud.js?v=readonly-locations-1"></script>
 <script>
 const form=document.getElementById("materialForm");
 const preview=document.getElementById("preview");
@@ -53,7 +54,7 @@ form.addEventListener("submit",event=>{
   description:document.getElementById("description").value.trim(),
   active:document.getElementById("active").checked,
   initialQuantity:document.getElementById("initialQuantity").value,
-  locationLabel:document.getElementById("locationLabel").value.trim(),
+  locationLabel:document.getElementById("locationLabel").selectedOptions[0]?.textContent || "",
   threshold:document.getElementById("threshold").value
  };
  preview.replaceChildren();
