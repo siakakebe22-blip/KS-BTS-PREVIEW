@@ -6,7 +6,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
-const companyId = params.get("company_id");
+let companyId = params.get("company_id");
+const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value || "");
 
 function showError(message) {
   $("loadState").hidden = false;
@@ -55,16 +56,30 @@ function renderMovements(rows) {
 }
 
 async function loadDashboard() {
-  if (!companyId || !/^[0-9a-f-]{36}$/i.test(companyId)) {
-    throw new Error("Identifiant d'entreprise absent ou invalide. Retournez à la sélection des entreprises.");
-  }
-
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;
   const user = sessionData.session?.user;
   if (!user) {
     location.replace("connexion.html");
     return;
+  }
+
+  // Secours strictement en lecture seule : si le lien a perdu company_id,
+  // on récupère automatiquement l’entreprise uniquement si RLS en retourne une seule.
+  if (!isUuid(companyId)) {
+    const { data: accessibleCompanies, error: listError } = await supabase
+      .from("companies")
+      .select("id,name,slug")
+      .order("created_at", { ascending: true })
+      .limit(2);
+    if (listError) throw listError;
+    if (accessibleCompanies?.length === 1) {
+      companyId = accessibleCompanies[0].id;
+    } else if (accessibleCompanies?.length > 1) {
+      throw new Error("Plusieurs entreprises sont accessibles. Retournez à la sélection et choisissez KS BTP Koloma.");
+    } else {
+      throw new Error("Aucune entreprise accessible pour ce compte. Retournez à la sélection des entreprises.");
+    }
   }
 
   // Cette lecture vérifie que l'utilisateur connecté est autorisé à voir cette entreprise.
