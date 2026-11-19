@@ -7,6 +7,9 @@ const $ = (id) => document.getElementById(id);
 
 let mode = "login";
 let busy = false;
+let currentUserId = null;
+let selectedCompanyId = null;
+let companyLoadSequence = 0;
 let recoveryMode = new URLSearchParams(location.hash.slice(1)).get("type") === "recovery";
 
 function notice(message, kind = "") {
@@ -35,19 +38,81 @@ function showMode(next) {
   notice("");
 }
 function showAuthenticated(user) {
+  currentUserId = user.id;
   $("authPanel").hidden = true;
   $("recoveryPanel").hidden = true;
   $("companyPanel").hidden = false;
   $("heading").textContent = "Votre espace KS BTP";
-  $("intro").textContent = "Votre compte est authentifié. Vous pouvez préparer un espace entreprise.";
+  $("intro").textContent = "Choisissez l'entreprise que vous souhaitez gérer.";
   $("signedInEmail").textContent = user.email || "";
-  notice("Connexion réussie. Vos anciennes données locales restent intactes et séparées.", "success");
+  loadCompanies(user.id);
 }
 function showUnauthenticated() {
+  currentUserId = null;
+  selectedCompanyId = null;
+  companyLoadSequence++;
   $("authPanel").hidden = false;
   $("companyPanel").hidden = true;
   $("recoveryPanel").hidden = true;
   if (!recoveryMode) showMode("login");
+}
+function renderCompanies(companies) {
+  const list = $("companyList");
+  list.replaceChildren();
+  if (!companies.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "Aucune entreprise n'est encore associée à ce compte. Vous pouvez créer votre premier espace ci-dessous.";
+    list.append(empty);
+    $("createCompanyPanel").open = true;
+    return;
+  }
+  companies.forEach((company) => {
+    const card = document.createElement("article");
+    card.className = "company-card";
+    const details = document.createElement("div");
+    details.className = "company-details";
+    const name = document.createElement("strong");
+    name.textContent = company.name;
+    const slug = document.createElement("span");
+    slug.className = "muted";
+    slug.textContent = company.slug;
+    details.append(name, slug);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "company-select";
+    button.textContent = selectedCompanyId === company.id ? "Entreprise sélectionnée" : "Sélectionner";
+    button.disabled = selectedCompanyId === company.id;
+    button.addEventListener("click", () => {
+      selectedCompanyId = company.id;
+      renderCompanies(companies);
+      notice("Entreprise sélectionnée : " + company.name + ". Les modules de gestion cloud seront raccordés dans une prochaine étape.", "success");
+    });
+    card.append(details, button);
+    if (selectedCompanyId === company.id) card.classList.add("selected");
+    list.append(card);
+  });
+}
+async function loadCompanies(userId, selectAfterLoad = null) {
+  const sequence = ++companyLoadSequence;
+  $("companyList").textContent = "Chargement de vos entreprises…";
+  const { data, error } = await supabase
+    .from("companies")
+    .select("id, name, slug")
+    .order("created_at", { ascending: true });
+  if (sequence !== companyLoadSequence || currentUserId !== userId) return;
+  if (error) {
+    $("companyList").textContent = "Impossible de charger les entreprises. Vérifiez la connexion et les autorisations RLS.";
+    notice("Chargement des entreprises impossible : " + error.message, "error");
+    return;
+  }
+  const companies = Array.isArray(data) ? data : [];
+  if (selectAfterLoad && companies.some(company => company.id === selectAfterLoad)) {
+    selectedCompanyId = selectAfterLoad;
+  } else if (selectedCompanyId && !companies.some(company => company.id === selectedCompanyId)) {
+    selectedCompanyId = null;
+  }
+  renderCompanies(companies);
 }
 
 $("loginTab").addEventListener("click", () => showMode("login"));
@@ -145,8 +210,10 @@ $("companyForm").addEventListener("submit", async (event) => {
     if (!result?.company_id || !result?.central_location_id) {
       throw new Error("La réponse de création est incomplète. Vérifiez l'espace entreprise avant de recommencer.");
     }
-    notice("Espace entreprise créé. Identifiant : " + slug + ". Aucun ancien inventaire local n'a été importé.", "success");
-    $("companyForm").hidden = true;
+    $("companyForm").reset();
+    $("companySlug").dataset.edited = "";
+    notice("Espace entreprise créé. Actualisation de votre liste…", "success");
+    if (currentUserId) await loadCompanies(currentUserId, result.company_id);
   } catch (error) {
     notice(error.message || "Création de l'espace impossible. Vérifiez les autorisations Supabase et la disponibilité de l'identifiant.", "error");
   } finally {
