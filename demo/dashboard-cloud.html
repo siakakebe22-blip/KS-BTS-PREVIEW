@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a"><title>KS BTP — Dashboard cloud (aperçu)</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#17263a;background:#f2f5f9}
+*{box-sizing:border-box}body{margin:0}.top{background:#14243a;color:#fff;padding:18px max(18px,calc((100vw - 1100px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;gap:10px;align-items:center}.mark{display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:#294563;font-weight:900}.brand small{display:block;color:#bdcde0;font-size:12px;margin-top:2px}.container{max-width:1100px;margin:auto;padding:22px 16px 44px}.notice{padding:12px 14px;background:#fff5dd;border:1px solid #f0dfb2;border-radius:12px;font-size:13px;color:#765619;line-height:1.5;margin-bottom:18px}.welcome{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:8px 0 20px}.welcome h1{font-size:24px;margin:0 0 5px}.muted{color:#66768a;font-size:13px}.tag{display:inline-flex;border-radius:99px;padding:6px 10px;background:#fff0cf;color:#805a12;font-size:12px;font-weight:700}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.panel,.module{background:white;border:1px solid #e1e8f0;border-radius:14px;padding:16px}.metric small{color:#6d7c90;font-size:12px}.metric strong{display:block;font-size:25px;margin:9px 0 4px}.metric span{font-size:12px;color:#8290a2}.section-title{margin:24px 0 12px;font-size:17px}.modules{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.module{display:flex;gap:12px;align-items:flex-start;color:inherit;text-decoration:none}.ico{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:#eef3f8;font-size:20px;flex:0 0 auto}.module h3{font-size:14px;margin:2px 0 6px}.module p{margin:0;color:#718096;font-size:12px;line-height:1.45}.module em{font-size:11px;color:#8a96a5;display:block;margin-top:8px;font-style:normal}.panel-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.panel h2{font-size:15px;margin:0 0 12px}.placeholder{background:#f7f9fb;border-radius:10px;padding:14px;font-size:13px;color:#6e7c90;line-height:1.55}.foot{font-size:11px;color:#8793a3;text-align:center;margin-top:24px}.back{color:#e4edf7;text-decoration:none;font-size:13px}
+@media(max-width:800px){.metrics{grid-template-columns:repeat(2,1fr)}.modules{grid-template-columns:repeat(2,1fr)}.panel-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.modules{grid-template-columns:1fr}.top{padding:14px 16px}.metric strong{font-size:22px}}
+</style></head>
+<body>
+<header class="top"><div class="brand"><div class="mark">KS</div><div><strong>KS BTP</strong><small>Gestion des matériels de chantier</small></div></div><a class="back" href="connexion.html">← Retour aux entreprises</a></header>
+<main class="container">
+<div class="notice"><strong>MODE APERÇU — Dashboard non connecté aux données réelles.</strong><br>Les chiffres et exemples ci-dessous sont fictifs. Aucun inventaire, chantier, mouvement ou stock cloud n'est lu ou modifié.</div>
+<div class="welcome"><div><h1>Tableau de bord</h1><div class="muted" id="company">Entreprise : chargement…</div></div><span class="tag">Prévisualisation Phase 4</span></div>
+<div class="metrics">
+<div class="metric"><small>Matériels enregistrés</small><strong>—</strong><span>Non connecté</span></div>
+<div class="metric"><small>Chantiers actifs</small><strong>—</strong><span>Non connecté</span></div>
+<div class="metric"><small>Mouvements récents</small><strong>—</strong><span>Non connecté</span></div>
+<div class="metric"><small>Alertes de stock</small><strong>—</strong><span>Non connecté</span></div>
+</div>
+<h2 class="section-title">Modules de gestion</h2><div class="modules">
+<div class="module"><div class="ico">📦</div><div><h3>Matériels</h3><p>Catalogue des équipements, état et quantité.</p><em>Module à connecter</em></div></div>
+<div class="module"><div class="ico">🏗️</div><div><h3>Chantiers</h3><p>Sites, responsables et matériels affectés.</p><em>Module à connecter</em></div></div>
+<div class="module"><div class="ico">🔄</div><div><h3>Mouvements</h3><p>Entrées, sorties, transferts et retours.</p><em>Module à connecter</em></div></div>
+<div class="module"><div class="ico">🏬</div><div><h3>Stocks</h3><p>Stock central et stocks par chantier.</p><em>Module à connecter</em></div></div>
+<div class="module"><div class="ico">📑</div><div><h3>Rapports</h3><p>Historique, synthèses et états.</p><em>Module à connecter</em></div></div>
+<div class="module"><div class="ico">⚙️</div><div><h3>Entreprise</h3><p>Informations et espace actif.</p><em>Module à connecter</em></div></div>
+</div>
+<h2 class="section-title">Activité récente</h2><div class="panel-grid"><section class="panel"><h2>Derniers mouvements</h2><div class="placeholder">Les mouvements réels s'afficheront ici une fois les tables, les droits d'accès et les filtres entreprise vérifiés.</div></section><section class="panel"><h2>État des stocks</h2><div class="placeholder">Les niveaux de stock et alertes seront affichés après raccordement sécurisé.</div></section></div>
+<div class="foot">KS BTP · Prototype visuel · Données fictives · Aucune action sur la base</div></main>
+<script>
+const p=new URLSearchParams(location.search);const n=p.get("company_name");const s=p.get("company_slug");document.getElementById("company").textContent="Entreprise : "+(n||"Non précisée")+(s?" · "+s:"");
+</script></body></html>
