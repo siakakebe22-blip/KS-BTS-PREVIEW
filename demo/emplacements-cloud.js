@@ -29,7 +29,7 @@ function renderLocations(rows) {
     const name = document.createElement("strong");
     name.textContent = row.name;
     const detail = document.createElement("small");
-    detail.textContent = (row.location_type === "central" ? "Dépôt central" : row.location_type === "site" ? "Emplacement de chantier" : row.location_type) +
+    detail.textContent = (row.location_type === "central" ? "Dépôt central" : row.location_type === "chantier" ? "Emplacement de chantier" : row.location_type) +
       (row.site_id ? " · Chantier associé" : "");
     item.append(name, detail);
     list.append(item);
