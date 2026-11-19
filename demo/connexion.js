@@ -89,6 +89,21 @@ function renderCompanies(companies) {
       notice("Entreprise sélectionnée : " + company.name + ". Les modules de gestion cloud seront raccordés dans une prochaine étape.", "success");
     });
     card.append(details, button);
+    if (selectedCompanyId === company.id) {
+      card.classList.add("selected");
+      const dashboard = document.createElement("button");
+      dashboard.type = "button";
+      dashboard.className = "company-select";
+      dashboard.textContent = "Ouvrir le tableau de bord (aperçu)";
+      dashboard.addEventListener("click", () => {
+        const params = new URLSearchParams({
+          company_name: company.name,
+          company_slug: company.slug || ""
+        });
+        location.href = "dashboard-cloud.html?" + params.toString();
+      });
+      card.append(dashboard);
+    }
     if (selectedCompanyId === company.id) card.classList.add("selected");
     list.append(card);
   });
