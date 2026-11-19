@@ -53,7 +53,7 @@ async function loadLocations() {
   select.replaceChildren(new Option("Choisir un emplacement", ""));
   (locations || []).forEach((item) => {
     const typeLabel = item.location_type === "central" ? "Dépôt central" :
-      item.location_type === "site" ? "Chantier" : item.location_type;
+      item.location_type === "chantier" ? "Chantier" : item.location_type;
     const option = new Option(item.name + " — " + typeLabel, item.id);
     option.dataset.name = item.name;
     select.add(option);
