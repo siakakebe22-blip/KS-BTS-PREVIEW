@@ -106,9 +106,13 @@ function validateForm() {
     locationSelect.setCustomValidity("Choisissez un emplacement cloud actif dans la liste.");
   }
 
-  const valid = form.checkValidity();
+  const locationValid = !locationSelect.disabled && Boolean(locationSelect.value) &&
+    Array.from(locationSelect.options).some((option) => option.value === locationSelect.value);
+  const valid = form.checkValidity() && locationValid;
   if (!valid) {
-    showValidation("Vérifiez les champs signalés : la désignation, l'unité, l'état, la quantité et l'emplacement sont à contrôler.");
+    showValidation(locationSelect.disabled
+      ? "Attendez le chargement des emplacements cloud avant de vérifier la fiche."
+      : "Vérifiez les champs signalés : la désignation, l'unité, l'état, la quantité et l'emplacement sont à contrôler.");
     form.reportValidity();
   } else {
     showValidation("Formulaire valide. La fiche peut être vérifiée en aperçu ; aucun enregistrement n'est effectué.", "success");
