@@ -21,6 +21,9 @@
 <div class="field"><label for="unit">Unité *</label><select id="unit" required><option value="unité">Unité</option><option value="pièce">Pièce</option><option value="lot">Lot</option><option value="mètre">Mètre</option><option value="m²">m²</option><option value="m³">m³</option><option value="litre">Litre</option><option value="kg">Kilogramme</option><option value="tonne">Tonne</option></select></div>
 <div class="field"><label for="condition">État du matériel *</label><select id="condition" required><option value="bon">Bon</option><option value="moyen">Moyen</option><option value="à réparer">À réparer</option><option value="hors service">Hors service</option></select><small>Valeurs prévues selon la colonne condition_status de la base actuelle.</small></div>
 <div class="field"><label for="description">Description (facultatif)</label><textarea id="description" maxlength="1000" placeholder="Détails utiles sur le matériel…"></textarea></div>
+<div class="field"><label for="initialQuantity">Quantité initiale (aperçu)</label><input id="initialQuantity" type="number" min="0" step="0.001" value="0"><small>Cette quantité devra ensuite passer par un mouvement d'entrée traçable, jamais par une modification directe du stock.</small></div>
+<div class="field"><label for="locationLabel">Lieu de stockage prévu</label><input id="locationLabel" maxlength="120" placeholder="Ex. Dépôt central"><small>Libellé indicatif uniquement. Le lieu réel devra être associé à un emplacement cloud existant.</small></div>
+<div class="field"><label for="threshold">Seuil d'alerte souhaité (aperçu)</label><input id="threshold" type="number" min="0" step="0.001" placeholder="Ex. 5"><small>Le schéma cloud actuel ne contient pas de colonne pour ce seuil : cette valeur reste provisoire et ne sera pas enregistrée.</small></div>
 <label class="inline"><input id="active" type="checkbox" checked> Matériel actif dans le catalogue</label>
 <div class="actions"><button class="btn primary" type="submit">Vérifier les informations</button><button class="btn secondary" type="reset">Effacer le formulaire</button></div>
 </form>
@@ -30,7 +33,7 @@
 <p class="muted">La fiche ci-dessous est générée uniquement dans cette page. Elle n'est pas sauvegardée.</p>
 <div id="preview" class="preview" aria-live="polite"><strong>Aucune fiche préparée</strong><p>Remplissez le formulaire puis choisissez « Vérifier les informations ».</p></div>
 <div class="actions"><button class="btn disabled" type="button" disabled>Enregistrer dans le cloud — désactivé</button></div>
-<p class="muted">Le stock initial, le seuil d'alerte et les mouvements seront traités dans des étapes séparées afin de respecter la structure actuelle du stock et son historique.</p>
+<p class="muted">La quantité et le lieu sont préparés à titre indicatif. Le seuil reste provisoire car il n'existe pas dans le schéma cloud vérifié. Aucun de ces champs n'est envoyé à Supabase.</p>
 </section>
 </div>
 <div class="foot">KS BTP · Prévisualisation uniquement · Aucun accès en écriture à Supabase</div>
@@ -48,7 +51,10 @@ form.addEventListener("submit",event=>{
   unit:document.getElementById("unit").value,
   condition:document.getElementById("condition").value,
   description:document.getElementById("description").value.trim(),
-  active:document.getElementById("active").checked
+  active:document.getElementById("active").checked,
+  initialQuantity:document.getElementById("initialQuantity").value,
+  locationLabel:document.getElementById("locationLabel").value.trim(),
+  threshold:document.getElementById("threshold").value
  };
  preview.replaceChildren();
  const title=document.createElement("strong");title.textContent=values.name;preview.append(title);
@@ -58,7 +64,10 @@ form.addEventListener("submit",event=>{
   "Unité : "+values.unit,
   "État : "+values.condition,
   "Statut : "+(values.active?"Actif":"Inactif"),
-  "Description : "+(values.description||"Aucune")
+  "Description : "+(values.description||"Aucune"),
+  "Quantité initiale (aperçu) : "+(values.initialQuantity||"0"),
+  "Lieu prévu (à confirmer) : "+(values.locationLabel||"Non renseigné"),
+  "Seuil d'alerte (provisoire, non pris en charge par le schéma actuel) : "+(values.threshold||"Non renseigné")
  ];
  lines.forEach(value=>{const p=document.createElement("p");p.textContent=value;preview.append(p)});
  const note=document.createElement("p");note.textContent="Aperçu temporaire uniquement — rien n'a été envoyé ni enregistré.";preview.append(note);
