@@ -13,3 +13,13 @@ button{font:inherit}.primary{min-height:47px;border:0;border-radius:9px;backgrou
 footer{text-align:center;color:#8a97a8;font-size:11px;margin:24px 0 0}
 [hidden]{display:none!important}
 @media(max-width:420px){.auth-shell{padding-top:24px}.auth-card{padding:22px 18px}h1{font-size:24px}}
+
+.company-section{margin-top:22px}.company-section h2{margin:0 0 7px}.intro.compact{font-size:13px;margin:0 0 12px}
+.company-list{display:grid;gap:10px}.company-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #dbe4ee;border-radius:11px;background:#fbfcfe}
+.company-card.selected{border-color:#39835b;background:#f1faf4}.company-details{display:grid;gap:4px;min-width:0}.company-details strong{overflow-wrap:anywhere}.muted{font-size:12px;color:#718096;overflow-wrap:anywhere}
+.company-select{flex:0 0 auto;border:0;border-radius:8px;background:#e8edf4;color:#20334b;padding:10px 12px;font-weight:700;cursor:pointer}
+.company-select:disabled{background:#dff3e6;color:#17613a;cursor:default}
+.create-company-panel{margin-top:18px;padding:13px;border:1px solid #e2e8f0;border-radius:10px}
+.create-company-panel summary{cursor:pointer;font-weight:750;color:#315f91}
+.create-company-panel>p{margin-top:12px}
+@media(max-width:420px){.company-card{align-items:flex-start;flex-direction:column}.company-select{width:100%}}
