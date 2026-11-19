@@ -135,7 +135,8 @@ Les identifiants externes et références lisibles sont uniques dans leur entrep
 
 ## 7. Points non décidés
 
-- Infrastructure backend : non choisie. Le projet Supabase dédié n'est pas disponible dans le quota gratuit actuel ; aucun projet existant ne sera suspendu et aucun service payant ne sera activé sans autorisation.
+- Infrastructure backend : Supabase a été choisi pour le prototype de développement. Le propriétaire a créé le projet dédié `KS-BTP-DEV` dans l'organisation `Service KS BTP`, sur l'offre Free. Aucun projet antérieur n'a été suspendu ou modifié et aucun service payant n'a été activé.
+- La connexion Supabase actuellement disponible dans les outils n'a pas encore les droits sur ce nouveau projet ; aucune opération distante ne doit être tentée sur les autres projets visibles.
 - Fournisseur d'authentification : à choisir avec le backend.
 - Règles définitives de sortie/réception : validation métier nécessaire.
 - Politique de conservation et suppression des données clients : à définir avant commercialisation.
