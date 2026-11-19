@@ -70,9 +70,58 @@ async function loadLocations() {
 
 const form = $("materialForm");
 const preview = $("preview");
+const validationState = $("validationState");
+
+function showValidation(message = "", kind = "error") {
+  if (!validationState) return;
+  validationState.hidden = !message;
+  validationState.textContent = message;
+  validationState.dataset.kind = kind;
+}
+
+function validateForm() {
+  const name = $("name");
+  const quantity = $("initialQuantity");
+  const threshold = $("threshold");
+  const locationSelect = $("locationLabel");
+
+  [name, quantity, threshold, locationSelect].forEach((field) => field.setCustomValidity(""));
+
+  if (!name.value.trim()) {
+    name.setCustomValidity("Veuillez saisir une désignation non vide.");
+  }
+
+  const quantityValue = quantity.value.trim();
+  if (quantityValue === "" || !Number.isFinite(Number(quantityValue)) || Number(quantityValue) < 0) {
+    quantity.setCustomValidity("La quantité initiale doit être un nombre positif ou égal à zéro.");
+  }
+
+  const thresholdValue = threshold.value.trim();
+  if (thresholdValue !== "" && (!Number.isFinite(Number(thresholdValue)) || Number(thresholdValue) < 0)) {
+    threshold.setCustomValidity("Le seuil doit être un nombre positif ou égal à zéro, ou rester vide.");
+  }
+
+  if (locationSelect.disabled || !locationSelect.value ||
+      !Array.from(locationSelect.options).some((option) => option.value === locationSelect.value)) {
+    locationSelect.setCustomValidity("Choisissez un emplacement cloud actif dans la liste.");
+  }
+
+  const valid = form.checkValidity();
+  if (!valid) {
+    showValidation("Vérifiez les champs signalés : la désignation, l'unité, l'état, la quantité et l'emplacement sont à contrôler.");
+    form.reportValidity();
+  } else {
+    showValidation("Formulaire valide. La fiche peut être vérifiée en aperçu ; aucun enregistrement n'est effectué.", "success");
+  }
+  return valid;
+}
+
+form.addEventListener("input", () => showValidation());
+form.addEventListener("change", () => showValidation());
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (!form.reportValidity()) return;
+  if (!validateForm()) return;
   const select = $("locationLabel");
   const values = {
     reference: $("reference").value.trim(),
@@ -82,9 +131,9 @@ form.addEventListener("submit", (event) => {
     condition: $("condition").value,
     description: $("description").value.trim(),
     active: $("active").checked,
-    initialQuantity: $("initialQuantity").value,
+    initialQuantity: String(Number($("initialQuantity").value)),
     locationLabel: select.selectedOptions[0]?.textContent || "",
-    threshold: $("threshold").value
+    threshold: $("threshold").value.trim()
   };
   preview.replaceChildren();
   const title = document.createElement("strong");
@@ -97,8 +146,8 @@ form.addEventListener("submit", (event) => {
     "État : " + values.condition,
     "Statut : " + (values.active ? "Actif" : "Inactif"),
     "Description : " + (values.description || "Aucune"),
-    "Quantité initiale (aperçu) : " + (values.initialQuantity || "0"),
-    "Emplacement cloud sélectionné : " + (values.locationLabel || "Aucun emplacement choisi"),
+    "Quantité initiale (aperçu) : " + values.initialQuantity,
+    "Emplacement cloud sélectionné : " + values.locationLabel,
     "Seuil d'alerte (provisoire, non pris en charge par le schéma actuel) : " + (values.threshold || "Non renseigné")
   ];
   lines.forEach((value) => {
@@ -112,6 +161,9 @@ form.addEventListener("submit", (event) => {
 });
 
 form.addEventListener("reset", () => {
+  showValidation();
+  [ $("name"), $("initialQuantity"), $("threshold"), $("locationLabel") ]
+    .forEach((field) => field.setCustomValidity(""));
   preview.replaceChildren();
   const strong = document.createElement("strong");
   strong.textContent = "Aucune fiche préparée";
