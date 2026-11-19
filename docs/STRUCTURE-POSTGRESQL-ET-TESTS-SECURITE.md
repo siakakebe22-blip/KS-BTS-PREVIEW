@@ -1,6 +1,6 @@
 # Structure PostgreSQL et plan de tests de sécurité multi-entreprises — KS BTP
 
-**Statut :** document de conception uniquement. Aucun compte, projet, serveur, schéma SQL ou migration n'a été créé ou exécuté.
+**Statut :** document de conception uniquement. Le propriétaire a créé un projet Supabase de développement `KS-BTP-DEV` dans l'organisation `Service KS BTP`. Aucun schéma SQL ni aucune migration n'ont été exécutés. L'accès par l'intégration Supabase actuellement connectée n'est pas encore confirmé pour ce projet.
 
 **Branche de travail :** `phase-1-architecture-multientreprises` du dépôt `siakakebe22-blip/KS-BTS-PREVIEW`.
 
