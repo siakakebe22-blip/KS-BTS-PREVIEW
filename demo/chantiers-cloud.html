@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a"><title>KS BTP — Chantiers (aperçu)</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#17263a;background:#f2f5f9}*{box-sizing:border-box}body{margin:0}.top{background:#14243a;color:#fff;padding:16px max(16px,calc((100vw - 1040px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:10px}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#294563;font-weight:900}.brand small{display:block;color:#bdcde0;font-size:12px}.back{color:#e4edf7;text-decoration:none;font-size:13px}.container{max-width:1040px;margin:auto;padding:22px 16px 44px}.intro{margin-bottom:16px}.intro h1{font-size:24px;margin:0 0 6px}.muted{color:#68788d;font-size:13px;line-height:1.5}.notice{padding:12px 14px;border-radius:11px;background:#fff8e8;border:1px solid #f0dfb4;color:#745317;font-size:13px;line-height:1.5;margin:14px 0}.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:14px}.panel{background:white;border:1px solid #e1e8f0;border-radius:14px;padding:18px;min-width:0}.panel h2{font-size:16px;margin:0 0 14px}.field{display:grid;gap:6px;margin-bottom:13px}.field label{font-size:13px;font-weight:650}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd9e5;border-radius:9px;padding:11px 12px;font:inherit;font-size:14px;background:#fff;color:#17263a}.field textarea{min-height:76px;resize:vertical}.field small{font-size:11px;color:#7a899b}.btn{border:0;border-radius:9px;padding:11px 15px;font-weight:700;font-size:13px;cursor:pointer}.primary{background:#1d5b91;color:white}.secondary{background:#eaf0f6;color:#28415d}.disabled{background:#dce3eb;color:#6e7b8b;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.list{display:grid;gap:9px}.item{padding:12px;border:1px solid #e7edf3;border-radius:10px}.item strong{display:block;font-size:14px}.item small{display:block;color:#718096;font-size:12px;margin-top:4px}.item p{font-size:12px;color:#53657a;margin:6px 0 0}.search{width:100%;border:1px solid #cfd9e5;border-radius:9px;padding:11px 12px;font:inherit;margin:0 0 12px}.preview{margin-top:12px;border:1px dashed #b7c6d6;border-radius:10px;padding:13px;background:#f8fafc}.preview p{margin:5px 0;font-size:13px;overflow-wrap:anywhere}.foot{text-align:center;color:#8793a3;font-size:11px;margin-top:22px}@media(max-width:760px){.grid{grid-template-columns:1fr}.top{padding:14px 16px}}
+</style></head>
+<body>
+<header class="top"><div class="brand"><div class="mark">KS</div><div><strong>KS BTP</strong><small>Gestion des chantiers · espace cloud</small></div></div><a class="back" id="backLink" href="dashboard-cloud.html">← Tableau de bord</a></header>
+<main class="container">
+<div class="intro"><h1>Gestion des chantiers</h1><p class="muted" id="companyName">Entreprise : vérification…</p></div>
+<div class="notice"><strong>Mode aperçu sécurisé.</strong> Cette page consulte les chantiers autorisés et prépare une fiche temporaire. Aucun chantier ne sera créé, modifié ou supprimé dans Supabase.</div>
+<div class="grid">
+<section class="panel">
+<h2>Chantiers de l'entreprise</h2>
+<div id="siteState" class="muted" role="status" aria-live="polite">Chargement des chantiers…</div>
+<input class="search" id="siteSearch" type="search" placeholder="Rechercher un chantier par nom…" aria-label="Rechercher un chantier">
+<div id="siteList" class="list"></div>
+</section>
+<section class="panel">
+<h2>Préparer une fiche chantier</h2>
+<form id="siteForm">
+<div class="field"><label for="siteReference">Référence (facultatif)</label><input id="siteReference" maxlength="60" placeholder="Ex. CH-001"></div>
+<div class="field"><label for="siteName">Nom du chantier *</label><input id="siteName" maxlength="160" required placeholder="Ex. Construction bâtiment Koloma"></div>
+<div class="field"><label for="siteAddress">Adresse / localisation</label><input id="siteAddress" maxlength="240" placeholder="Ex. Koloma 2, Conakry"></div>
+<div class="field"><label for="siteManager">Responsable du chantier</label><input id="siteManager" maxlength="160" placeholder="Nom du responsable"></div>
+<div class="field"><label for="siteStatus">Statut souhaité (aperçu)</label><select id="siteStatus"><option value="active">Actif</option><option value="finished">Terminé</option></select></div>
+<div class="field"><label for="siteDescription">Observations</label><textarea id="siteDescription" maxlength="1000" placeholder="Informations complémentaires…"></textarea></div>
+<div class="actions"><button class="btn primary" type="submit">Vérifier l'aperçu</button><button class="btn secondary" type="reset">Effacer</button></div>
+</form>
+<div id="preview" class="preview" aria-live="polite"><strong>Aucune fiche préparée</strong><p>Remplissez le formulaire puis vérifiez les informations.</p></div>
+<div class="actions"><button class="btn disabled" type="button" disabled>Enregistrer le chantier — désactivé</button></div>
+<p class="muted">Les champs complémentaires sont provisoires : aucune compatibilité de stockage n'est présumée et aucun enregistrement n'est effectué.</p>
+</section>
+</div>
+<div class="foot">KS BTP · Prévisualisation uniquement · Lecture seule · Aucune modification des données existantes</div>
+</main>
+<script type="module" src="chantiers-cloud.js?v=preview-sites-1"></script>
+</body></html>
