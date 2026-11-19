@@ -39,40 +39,5 @@
 <div class="foot">KS BTP · Prévisualisation uniquement · Aucun accès en écriture à Supabase</div>
 </main>
 <script type="module" src="catalogue-cloud.js?v=readonly-locations-1"></script>
-<script>
-const form=document.getElementById("materialForm");
-const preview=document.getElementById("preview");
-form.addEventListener("submit",event=>{
- event.preventDefault();
- if(!form.reportValidity()) return;
- const values={
-  reference:document.getElementById("reference").value.trim(),
-  name:document.getElementById("name").value.trim(),
-  category:document.getElementById("category").value.trim(),
-  unit:document.getElementById("unit").value,
-  condition:document.getElementById("condition").value,
-  description:document.getElementById("description").value.trim(),
-  active:document.getElementById("active").checked,
-  initialQuantity:document.getElementById("initialQuantity").value,
-  locationLabel:document.getElementById("locationLabel").selectedOptions[0]?.textContent || "",
-  threshold:document.getElementById("threshold").value
- };
- preview.replaceChildren();
- const title=document.createElement("strong");title.textContent=values.name;preview.append(title);
- const lines=[
-  "Référence : "+(values.reference||"Non renseignée"),
-  "Catégorie : "+(values.category||"Non renseignée"),
-  "Unité : "+values.unit,
-  "État : "+values.condition,
-  "Statut : "+(values.active?"Actif":"Inactif"),
-  "Description : "+(values.description||"Aucune"),
-  "Quantité initiale (aperçu) : "+(values.initialQuantity||"0"),
-  "Emplacement cloud sélectionné : "+(values.locationLabel||"Aucun emplacement choisi"),
-  "Seuil d'alerte (provisoire, non pris en charge par le schéma actuel) : "+(values.threshold||"Non renseigné")
- ];
- lines.forEach(value=>{const p=document.createElement("p");p.textContent=value;preview.append(p)});
- const note=document.createElement("p");note.textContent="Aperçu temporaire uniquement — rien n'a été envoyé ni enregistré.";preview.append(note);
-});
-form.addEventListener("reset",()=>{preview.replaceChildren();const strong=document.createElement("strong");strong.textContent="Aucune fiche préparée";const p=document.createElement("p");p.textContent="Remplissez le formulaire puis choisissez « Vérifier les informations ».";preview.append(strong,p)});
-</script>
+
 </body></html>
