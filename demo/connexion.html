@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14243a">
+  <meta name="description" content="KS BTP — Connexion et création d'espace entreprise.">
+  <title>Connexion — KS BTP</title>
+  <link rel="stylesheet" href="connexion.css">
+</head>
+<body>
+  <main class="auth-shell">
+    <header class="brand">
+      <span class="brand-mark">KS</span>
+      <span><strong>KS BTP</strong><small>Gestion des matériels de chantier</small></span>
+    </header>
+    <section class="auth-card">
+      <p class="eyebrow">ESPACE PROFESSIONNEL</p>
+      <h1 id="heading">Accéder à KS BTP</h1>
+      <p class="intro" id="intro">Connectez-vous à votre compte ou créez un nouvel accès.</p>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <section id="authPanel">
+        <div class="tabs" role="tablist" aria-label="Authentification">
+          <button type="button" class="tab active" id="loginTab" aria-selected="true">Connexion</button>
+          <button type="button" class="tab" id="signupTab" aria-selected="false">Créer un compte</button>
+        </div>
+        <form id="authForm">
+          <label id="nameField" hidden>Nom complet
+            <input id="fullName" type="text" autocomplete="name" maxlength="120" placeholder="Votre nom complet">
+          </label>
+          <label>Adresse e-mail
+            <input id="email" type="email" autocomplete="email" required maxlength="254" placeholder="exemple@email.com">
+          </label>
+          <label>Mot de passe
+            <input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="8 caractères minimum">
+          </label>
+          <button class="primary" id="submitAuth" type="submit">Se connecter</button>
+        </form>
+        <button class="text-button" id="forgotPassword" type="button">Mot de passe oublié ?</button>
+      </section>
+      <section id="companyPanel" hidden>
+        <div class="signed-in">
+          <span class="check">✓</span>
+          <div><strong>Compte connecté</strong><p id="signedInEmail"></p></div>
+        </div>
+        <h2>Créer votre entreprise</h2>
+        <p class="intro">Chaque entreprise possède son propre espace. Cette étape ne transfère aucune donnée de l'ancien stockage local.</p>
+        <form id="companyForm">
+          <label>Nom de l'entreprise
+            <input id="companyName" required minlength="2" maxlength="120" placeholder="Ex. KS BTP">
+          </label>
+          <label>Identifiant de l'espace
+            <input id="companySlug" required minlength="3" maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="ex. ks-btp">
+          </label>
+          <button class="primary" id="createCompany" type="submit">Créer mon espace</button>
+        </form>
+        <button class="text-button" id="signOut" type="button">Se déconnecter</button>
+      </section>
+      <section id="recoveryPanel" hidden>
+        <h2>Choisir un nouveau mot de passe</h2>
+        <form id="recoveryForm">
+          <label>Nouveau mot de passe
+            <input id="newPassword" type="password" minlength="8" autocomplete="new-password" required>
+          </label>
+          <button class="primary" type="submit">Enregistrer le mot de passe</button>
+        </form>
+      </section>
+    </section>
+    <aside class="safety-note">
+      <strong>Protection de vos données existantes</strong>
+      <p>Cette page d'authentification est indépendante de l'application locale. Elle ne lit, ne modifie et n'envoie ni votre inventaire local, ni vos chantiers, ni vos mouvements enregistrés sur cet appareil.</p>
+    </aside>
+    <footer>KS BTP · Espace de prévisualisation · Connexion Internet requise</footer>
+  </main>
+  <script type="module" src="connexion.js"></script>
+</body>
+</html>
