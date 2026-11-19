@@ -58,6 +58,9 @@ function showUnauthenticated() {
 }
 function renderCompanies(companies) {
   const list = $("companyList");
+  const openDashboard = $("openDashboard");
+  openDashboard.hidden = true;
+  openDashboard.onclick = null;
   list.replaceChildren();
   if (!companies.length) {
     const empty = document.createElement("p");
@@ -89,24 +92,20 @@ function renderCompanies(companies) {
       notice("Entreprise sélectionnée : " + company.name + ". Les modules de gestion cloud seront raccordés dans une prochaine étape.", "success");
     });
     card.append(details, button);
-    if (selectedCompanyId === company.id) {
-      card.classList.add("selected");
-      const dashboard = document.createElement("button");
-      dashboard.type = "button";
-      dashboard.className = "company-select";
-      dashboard.textContent = "Ouvrir le tableau de bord (aperçu)";
-      dashboard.addEventListener("click", () => {
-        const params = new URLSearchParams({
-          company_name: company.name,
-          company_slug: company.slug || ""
-        });
-        location.href = "dashboard-cloud.html?" + params.toString();
-      });
-      card.append(dashboard);
-    }
     if (selectedCompanyId === company.id) card.classList.add("selected");
     list.append(card);
   });
+  const selectedCompany = companies.find(company => company.id === selectedCompanyId);
+  if (selectedCompany) {
+    openDashboard.hidden = false;
+    openDashboard.onclick = () => {
+      const params = new URLSearchParams({
+        company_name: selectedCompany.name,
+        company_slug: selectedCompany.slug || ""
+      });
+      location.href = "dashboard-cloud.html?" + params.toString();
+    };
+  }
 }
 async function loadCompanies(userId, selectAfterLoad = null) {
   const sequence = ++companyLoadSequence;
