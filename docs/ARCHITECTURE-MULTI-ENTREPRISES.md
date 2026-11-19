@@ -145,8 +145,10 @@ Aucune migration ne doit réinitialiser `ks_btp_v1`, supprimer IndexedDB, rempla
 - Le dépôt et le site de production restent intouchés sans autorisation explicite.
 - Aucun projet Supabase existant ne doit être suspendu ou modifié.
 - Aucun abonnement ou service payant ne doit être activé sans accord explicite.
-- La création du projet Supabase dédié KS BTP est actuellement bloquée par la limite de projets gratuits de l'organisation ; aucune infrastructure distante n'est donc présumée disponible.
-- Tant que l'infrastructure n'est pas autorisée et disponible, les travaux restent limités à la conception, à l'audit et aux préparatifs non destructifs.
+- Un projet Supabase de développement dédié a été créé par le propriétaire dans l'organisation `Service KS BTP`, sous le nom `KS-BTP-DEV`, sur l'offre Free. URL communiquée : `https://fbqtbaeanxromfksfllr.supabase.co`.
+- Le tableau de bord partagé par le propriétaire indiquait `Healthy`, sans migration ni sauvegarde affichée à ce moment. Ce statut provient de sa capture et n'a pas été vérifié par API depuis notre connexion, qui ne dispose pas encore des droits sur ce projet.
+- Aucun SQL n'a été exécuté et aucune table n'a été créée. Le premier brouillon SQL est conservé dans `docs/sql/0001-SOCLE-IDENTITE-ENTREPRISES-BROUILLON.md`.
+- Les travaux restent limités à la conception et aux vérifications non destructives tant que l'accès au bon projet et l'autorisation d'exécution ne sont pas confirmés.
 
 ## 10. Critères d'acceptation avant toute mise en service
 
