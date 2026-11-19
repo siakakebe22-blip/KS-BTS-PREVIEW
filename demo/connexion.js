@@ -101,7 +101,8 @@ function renderCompanies(companies) {
     openDashboard.onclick = () => {
       const params = new URLSearchParams({
         company_name: selectedCompany.name,
-        company_slug: selectedCompany.slug || ""
+        company_slug: selectedCompany.slug || "",
+        company_id: selectedCompany.id
       });
       location.href = "dashboard-cloud.html?" + params.toString();
     };
