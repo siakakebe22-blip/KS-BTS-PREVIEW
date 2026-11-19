@@ -14,6 +14,7 @@
 <div class="grid">
 <section class="panel">
 <h2>Informations du matériel</h2>
+<div id="validationState" class="notice" role="alert" aria-live="polite" hidden></div>
 <form id="materialForm">
 <div class="field"><label for="reference">Référence (facultatif)</label><input id="reference" maxlength="80" placeholder="Ex. MAT-001"></div>
 <div class="field"><label for="name">Désignation du matériel *</label><input id="name" required maxlength="160" placeholder="Ex. Bétonnière 350 L"></div>
@@ -38,6 +39,6 @@
 </div>
 <div class="foot">KS BTP · Prévisualisation uniquement · Aucun accès en écriture à Supabase</div>
 </main>
-<script type="module" src="catalogue-cloud.js?v=readonly-locations-1"></script>
+<script type="module" src="catalogue-cloud.js?v=validation-preview-1"></script>
 
 </body></html>
