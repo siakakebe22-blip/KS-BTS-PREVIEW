@@ -98,6 +98,9 @@ async function loadDashboard() {
   const catalogueUrl = new URL("catalogue-cloud.html", location.href);
   catalogueUrl.searchParams.set("company_id", companyId);
   $("catalogueLink").href = catalogueUrl.toString();
+  const locationsUrl = new URL("emplacements-cloud.html", location.href);
+  locationsUrl.searchParams.set("company_id", companyId);
+  $("locationsLink").href = locationsUrl.toString();
 
   const queries = await Promise.all([
     supabase.from("materials").select("id", { count: "exact", head: true })
