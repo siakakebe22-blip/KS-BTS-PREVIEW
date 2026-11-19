@@ -115,7 +115,7 @@ Les identifiants externes et références lisibles sont uniques dans leur entrep
 
 ## 5. Règles métier à verrouiller avant migration
 
-1. **Sortie :** préciser si le bon de sortie représente un transfert du magasin central vers un chantier ou une consommation directe. Le code actuel semble débiter le stock du chantier pour un bon de sortie ; cette sémantique doit être vérifiée avec le processus réel.
+1. **Sortie de mouvement et bon de sortie :** ce sont deux opérations distinctes. Le mouvement autonome de type « sortie » transfère le stock du magasin central vers le chantier. Le bon de sortie, selon la règle métier déjà retenue pour KS BTP, représente une consommation sur chantier et débite donc le stock du chantier. Le futur modèle doit conserver cette distinction, avec des libellés explicites (transfert vers chantier / consommation sur chantier) pour éviter toute confusion.
 2. **Réception :** préciser si la réception est une entrée fournisseur au magasin central ou directement sur un chantier.
 3. **Retour :** confirmer le transfert du chantier vers le magasin central.
 4. **Consommation :** distinguer le transfert de stock et la consommation réelle sur chantier.
