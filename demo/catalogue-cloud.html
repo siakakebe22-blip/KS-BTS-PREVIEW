@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a"><title>KS BTP — Catalogue cloud (aperçu)</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#17263a;background:#f2f5f9}*{box-sizing:border-box}body{margin:0}.top{background:#14243a;color:#fff;padding:16px max(16px,calc((100vw - 960px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:10px}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#294563;font-weight:900}.brand small{display:block;color:#bdcde0;font-size:12px}.back{color:#e4edf7;text-decoration:none;font-size:13px}.container{max-width:960px;margin:auto;padding:22px 16px 44px}.intro{margin-bottom:16px}.intro h1{font-size:24px;margin:0 0 6px}.muted{color:#68788d;font-size:13px;line-height:1.5}.notice{padding:12px 14px;border-radius:11px;background:#fff8e8;border:1px solid #f0dfb4;color:#745317;font-size:13px;line-height:1.5;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{background:white;border:1px solid #e1e8f0;border-radius:14px;padding:18px}.panel h2{font-size:16px;margin:0 0 15px}.field{display:grid;gap:6px;margin-bottom:13px}.field label{font-size:13px;font-weight:650}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd9e5;border-radius:9px;padding:11px 12px;font:inherit;font-size:14px;background:#fff;color:#17263a}.field textarea{min-height:84px;resize:vertical}.field small{font-size:11px;color:#7a899b}.inline{display:flex;align-items:center;gap:9px;font-size:13px;margin:8px 0 14px}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.btn{border:0;border-radius:9px;padding:11px 15px;font-weight:700;font-size:13px;cursor:pointer}.primary{background:#1d5b91;color:white}.secondary{background:#eaf0f6;color:#28415d}.disabled{background:#dce3eb;color:#6e7b8b;cursor:not-allowed}.preview{margin-top:14px;border:1px dashed #b7c6d6;border-radius:10px;padding:13px;background:#f8fafc}.preview strong{display:block;margin-bottom:6px}.preview p{margin:4px 0;font-size:13px;overflow-wrap:anywhere}.foot{text-align:center;color:#8793a3;font-size:11px;margin-top:22px}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{padding:14px 16px}}
+</style></head>
+<body>
+<header class="top"><div class="brand"><div class="mark">KS</div><div><strong>KS BTP</strong><small>Catalogue des matériels · espace cloud</small></div></div><a class="back" href="dashboard-cloud.html">← Tableau de bord</a></header>
+<main class="container">
+<div class="intro"><h1>Ajouter un matériel</h1><p class="muted">Formulaire de préparation du catalogue cloud de l'entreprise. Il est séparé de votre inventaire local.</p></div>
+<div class="notice"><strong>Mode aperçu sécurisé.</strong> Le formulaire permet de vérifier les informations saisies, mais l'enregistrement cloud est volontairement désactivé. Aucun matériel ne sera créé, et aucune donnée locale ne sera lue ou modifiée.</div>
+<div class="grid">
+<section class="panel">
+<h2>Informations du matériel</h2>
+<form id="materialForm">
+<div class="field"><label for="reference">Référence (facultatif)</label><input id="reference" maxlength="80" placeholder="Ex. MAT-001"></div>
+<div class="field"><label for="name">Désignation du matériel *</label><input id="name" required maxlength="160" placeholder="Ex. Bétonnière 350 L"></div>
+<div class="field"><label for="category">Catégorie</label><input id="category" maxlength="100" placeholder="Ex. Engin, outillage, équipement"></div>
+<div class="field"><label for="unit">Unité *</label><select id="unit" required><option value="unité">Unité</option><option value="pièce">Pièce</option><option value="lot">Lot</option><option value="mètre">Mètre</option><option value="m²">m²</option><option value="m³">m³</option><option value="litre">Litre</option><option value="kg">Kilogramme</option><option value="tonne">Tonne</option></select></div>
+<div class="field"><label for="condition">État du matériel *</label><select id="condition" required><option value="bon">Bon</option><option value="moyen">Moyen</option><option value="à réparer">À réparer</option><option value="hors service">Hors service</option></select><small>Valeurs prévues selon la colonne condition_status de la base actuelle.</small></div>
+<div class="field"><label for="description">Description (facultatif)</label><textarea id="description" maxlength="1000" placeholder="Détails utiles sur le matériel…"></textarea></div>
+<label class="inline"><input id="active" type="checkbox" checked> Matériel actif dans le catalogue</label>
+<div class="actions"><button class="btn primary" type="submit">Vérifier les informations</button><button class="btn secondary" type="reset">Effacer le formulaire</button></div>
+</form>
+</section>
+<section class="panel">
+<h2>Aperçu de la fiche</h2>
+<p class="muted">La fiche ci-dessous est générée uniquement dans cette page. Elle n'est pas sauvegardée.</p>
+<div id="preview" class="preview" aria-live="polite"><strong>Aucune fiche préparée</strong><p>Remplissez le formulaire puis choisissez « Vérifier les informations ».</p></div>
+<div class="actions"><button class="btn disabled" type="button" disabled>Enregistrer dans le cloud — désactivé</button></div>
+<p class="muted">Le stock initial, le seuil d'alerte et les mouvements seront traités dans des étapes séparées afin de respecter la structure actuelle du stock et son historique.</p>
+</section>
+</div>
+<div class="foot">KS BTP · Prévisualisation uniquement · Aucun accès en écriture à Supabase</div>
+</main>
+<script>
+const form=document.getElementById("materialForm");
+const preview=document.getElementById("preview");
+form.addEventListener("submit",event=>{
+ event.preventDefault();
+ if(!form.reportValidity()) return;
+ const values={
+  reference:document.getElementById("reference").value.trim(),
+  name:document.getElementById("name").value.trim(),
+  category:document.getElementById("category").value.trim(),
+  unit:document.getElementById("unit").value,
+  condition:document.getElementById("condition").value,
+  description:document.getElementById("description").value.trim(),
+  active:document.getElementById("active").checked
+ };
+ preview.replaceChildren();
+ const title=document.createElement("strong");title.textContent=values.name;preview.append(title);
+ const lines=[
+  "Référence : "+(values.reference||"Non renseignée"),
+  "Catégorie : "+(values.category||"Non renseignée"),
+  "Unité : "+values.unit,
+  "État : "+values.condition,
+  "Statut : "+(values.active?"Actif":"Inactif"),
+  "Description : "+(values.description||"Aucune")
+ ];
+ lines.forEach(value=>{const p=document.createElement("p");p.textContent=value;preview.append(p)});
+ const note=document.createElement("p");note.textContent="Aperçu temporaire uniquement — rien n'a été envoyé ni enregistré.";preview.append(note);
+});
+form.addEventListener("reset",()=>{preview.replaceChildren();const strong=document.createElement("strong");strong.textContent="Aucune fiche préparée";const p=document.createElement("p");p.textContent="Remplissez le formulaire puis choisissez « Vérifier les informations ».";preview.append(strong,p)});
+</script>
+</body></html>
