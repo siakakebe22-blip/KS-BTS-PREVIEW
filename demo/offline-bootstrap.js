@@ -70,6 +70,6 @@ if(localIsValid&&snapshotIsValid){
     status.textContent="Stockage local créé, mais sauvegarde de sécurité indisponible : "+error.message;
   }
 }
-await import("./app.js?v=stock-audit-3");
+await import("./app.js?v=roles-matrix-1");
 window.addEventListener("ks-offline-save-error",event=>{const detail=String(event.detail||"Erreur inconnue.");status.textContent=detail.startsWith("SAUVEGARDE DE SÉCURITÉ :")?detail:"ÉCHEC DU STOCKAGE PRINCIPAL : "+detail;});
 window.addEventListener("ks-offline-saved",()=>{status.textContent="Sauvegarde locale effectuée avec historique de sécurité.";});
