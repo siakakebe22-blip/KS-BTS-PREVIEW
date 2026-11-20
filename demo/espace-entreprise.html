@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KS BTP — Espace entreprise</title>
+<style>
+:root{--navy:#14243a;--blue:#2563eb;--bg:#f3f6fb;--muted:#64748b;--line:#e5eaf2;--green:#168653;--orange:#b76a13}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#172338;font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:white;padding:18px max(20px,calc((100% - 1180px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:.5px;font-size:19px}.brand span{color:#8db7ff}header small{display:block;color:#c4d1e3;font-weight:400;font-size:12px}
+a{color:inherit}.back{color:white;text-decoration:none;border:1px solid #64748b;padding:8px 12px;border-radius:9px;font-size:13px}
+main{max-width:1180px;margin:26px auto;padding:0 18px}.eyebrow{color:var(--blue);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+h1{font-size:28px;margin:4px 0}.sub{color:var(--muted);margin:0 0 20px}
+.notice{background:#fff7e8;border:1px solid #f2d7a7;color:#80500d;padding:11px 14px;border-radius:10px;margin:16px 0 20px;font-size:13px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab{border:1px solid var(--line);background:white;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:650;color:#475569}.tab.active{background:var(--blue);border-color:var(--blue);color:white}
+.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 3px 12px #162b4608}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-7{grid-column:span 7}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+.kicker{font-size:12px;color:var(--muted);margin-bottom:6px}.metric{font-size:25px;font-weight:800}.muted{color:var(--muted)}.section-title{font-size:17px;margin:0 0 14px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:11px;font-weight:750;background:#e8f7ef;color:var(--green)}.pill.demo{background:#fff1dc;color:var(--orange)}
+dl{display:grid;grid-template-columns:150px 1fr;gap:10px;margin:0}dt{color:var(--muted)}dd{margin:0;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:650;background:#fafbfd}
+button.primary,button.secondary{border:0;border-radius:9px;padding:10px 13px;font-weight:700;cursor:pointer}button.primary{background:var(--blue);color:white}button.secondary{background:#edf2f8;color:#24364d}
+input,select{width:100%;border:1px solid #d7dfeb;border-radius:8px;padding:10px;font:inherit;margin:5px 0 12px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.formgrid label{font-size:12px;color:var(--muted);font-weight:650}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.empty{padding:18px;text-align:center;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 15px}
+@media(max-width:760px){.span-3,.span-4,.span-5,.span-7,.span-8{grid-column:span 12}.metric{font-size:22px}dl{grid-template-columns:1fr;gap:3px}dd{margin-bottom:8px}.formgrid{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:nowrap}}
+</style>
+</head>
+<body>
+<header><div class="brand">KS <span>BTP</span><small>Gestion professionnelle des chantiers</small></div><a class="back" href="administration-generale.html">← Administration générale</a></header>
+<main>
+<div class="eyebrow">Portail client</div><h1>Espace entreprise</h1><p class="sub">Gérez votre entreprise, votre abonnement et les accès de votre équipe.</p>
+<div class="notice"><strong>Version de démonstration :</strong> les informations affichées sont fictives. Les ajouts et changements restent dans cette page et disparaissent au rechargement. Aucun paiement, facture ou compte utilisateur réel n'est créé.</div>
+<div class="row"><div><strong id="companyHeading">Entreprise Démo BTP</strong><div class="muted" style="font-size:12px">Espace de démonstration · Identifiant DEMO-001</div></div><span class="pill demo">DONNÉES FICTIVES</span></div>
+<nav class="tabs" aria-label="Rubriques">
+<button class="tab active" data-tab="overview">Vue d'ensemble</button><button class="tab" data-tab="profile">Profil entreprise</button><button class="tab" data-tab="subscription">Abonnement</button><button class="tab" data-tab="payments">Paiements</button><button class="tab" data-tab="team">Employés</button>
+</nav>
+<section id="overview" class="panel active">
+<div class="grid">
+<div class="card span-3"><div class="kicker">Formule actuelle</div><div class="metric" style="font-size:20px">Professionnel</div><span class="pill demo">Simulation</span></div>
+<div class="card span-3"><div class="kicker">Prix indicatif</div><div class="metric">250 000</div><div class="muted">GNF / mois · hypothèse</div></div>
+<div class="card span-3"><div class="kicker">Statut</div><div class="metric" style="font-size:20px">En essai</div><div class="muted">Statut fictif</div></div>
+<div class="card span-3"><div class="kicker">Prochaine échéance</div><div class="metric" style="font-size:20px">30/11/2026</div><div class="muted">Date de démonstration</div></div>
+<div class="card span-7"><h2 class="section-title">Informations de l'entreprise</h2><dl><dt>Raison sociale</dt><dd id="overviewName">Entreprise Démo BTP</dd><dt>Ville</dt><dd>Conakry</dd><dt>Contact</dt><dd>contact@example.test</dd><dt>Responsable</dt><dd>Administrateur démo</dd></dl></div>
+<div class="card span-5"><h2 class="section-title">Accès rapides</h2><div class="actions"><button class="secondary" data-go="profile">Modifier le profil</button><button class="secondary" data-go="subscription">Voir l'abonnement</button><button class="secondary" data-go="team">Gérer les employés</button></div><p class="muted" style="font-size:12px;margin-top:14px">Les fonctionnalités réelles seront activées après intégration de l'authentification, des droits et du service de facturation.</p></div>
+</div></section>
+<section id="profile" class="panel"><div class="card"><h2 class="section-title">Profil de l'entreprise</h2><div class="formgrid"><label>Nom de l'entreprise<input id="companyName" value="Entreprise Démo BTP"></label><label>Adresse e-mail<input id="companyEmail" type="email" value="contact@example.test"></label><label>Téléphone<input id="companyPhone" value="+224 600 00 00 00"></label><label>Ville / adresse<input id="companyCity" value="Conakry, Guinée"></label><label>Nom du responsable<input id="companyManager" value="Administrateur démo"></label><label>Numéro d'identification<input value="DEMO-001" disabled></label></div><button class="primary" id="saveProfile">Enregistrer dans cette démo</button><p class="muted" id="profileMessage" role="status"></p></div></section>
+<section id="subscription" class="panel"><div class="grid"><div class="card span-5"><h2 class="section-title">Votre formule</h2><div class="metric">Professionnel</div><p class="muted">Hypothèse tarifaire : 250 000 GNF / mois</p><span class="pill demo">À valider commercialement</span><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><dl><dt>Statut démo</dt><dd>En essai</dd><dt>Début</dt><dd>01/11/2026</dd><dt>Échéance</dt><dd>30/11/2026</dd><dt>Renouvellement</dt><dd>Mensuel (proposition)</dd></dl></div><div class="card span-7"><h2 class="section-title">Fonctionnalités prévues</h2><ul><li>Gestion des matériaux et du catalogue</li><li>Suivi des stocks et des mouvements</li><li>Gestion des chantiers et emplacements</li><li>Rapports et historique</li><li>Gestion des employés selon les rôles autorisés</li></ul><p class="muted" style="font-size:12px">Les prix, limites, période d'essai et conditions restent à définir. Aucun changement de formule n'est effectué depuis cette maquette.</p></div></div></section>
+<section id="payments" class="panel"><div class="card"><div class="row"><h2 class="section-title">Historique des paiements</h2><span class="pill demo">Exemples fictifs</span></div><table><thead><tr><th>Référence</th><th>Date</th><th>Libellé</th><th>Montant</th><th>Statut</th><th>Document</th></tr></thead><tbody id="paymentRows"><tr><td>DEMO-PAY-001</td><td>01/11/2026</td><td>Abonnement Professionnel</td><td>250 000 GNF</td><td><span class="pill demo">En attente</span></td><td>—</td></tr><tr><td>DEMO-PAY-000</td><td>01/10/2026</td><td>Exemple de période précédente</td><td>250 000 GNF</td><td><span class="pill">Exemple payé</span></td><td>—</td></tr></tbody></table><p class="muted" style="font-size:12px;margin-top:12px">Aucun reçu officiel ni justificatif de paiement n'est généré. Le règlement réel nécessitera un prestataire et une validation sécurisée.</p></div></section>
+<section id="team" class="panel"><div class="card"><div class="row"><h2 class="section-title">Employés et accès</h2><button class="primary" id="showMemberForm">+ Ajouter un employé démo</button></div><p class="muted" style="font-size:13px">Exemples de rôles envisagés : directeur, magasinier et chef de chantier. Les accès ne sont pas encore des comptes authentifiés.</p><div id="memberForm" hidden><div class="formgrid"><label>Nom<input id="memberName" placeholder="Nom fictif"></label><label>Rôle<select id="memberRole"><option value="Magasinier">Magasinier</option><option value="Chef de chantier">Chef de chantier</option><option value="Directeur">Directeur</option></select></label></div><button class="primary" id="addMember">Ajouter à la démo</button> <button class="secondary" id="cancelMember">Annuler</button></div><table style="margin-top:14px"><thead><tr><th>Employé</th><th>Rôle</th><th>Statut</th><th>Action</th></tr></thead><tbody id="memberRows"><tr><td>Amadou Diallo (démo)</td><td>Magasinier</td><td><span class="pill">Actif · démo</span></td><td>—</td></tr><tr><td>Mariam Camara (démo)</td><td>Chef de chantier</td><td><span class="pill">Actif · démo</span></td><td>—</td></tr></tbody></table></div></section>
+</main><footer>KS BTP · Maquette de conception uniquement · Aucune donnée réelle ou transaction</footer>
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+function openTab(id){tabs.forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));}
+tabs.forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.tab)));
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.go)));
+document.getElementById('saveProfile').addEventListener('click',()=>{const n=document.getElementById('companyName').value.trim()||'Entreprise Démo BTP';document.getElementById('companyHeading').textContent=n;document.getElementById('overviewName').textContent=n;document.getElementById('profileMessage').textContent='Profil mis à jour dans cette démonstration uniquement.';});
+const form=document.getElementById('memberForm');
+document.getElementById('showMemberForm').addEventListener('click',()=>form.hidden=false);
+document.getElementById('cancelMember').addEventListener('click',()=>form.hidden=true);
+document.getElementById('addMember').addEventListener('click',()=>{const name=document.getElementById('memberName').value.trim();if(!name){alert('Saisissez un nom fictif pour la démonstration.');return;}const role=document.getElementById('memberRole').value;const tr=document.createElement('tr');[name,role].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});const status=document.createElement('td');status.innerHTML='<span class="pill demo">Ajouté · démo</span>';tr.appendChild(status);const action=document.createElement('td');const remove=document.createElement('button');remove.className='secondary';remove.textContent='Retirer';remove.addEventListener('click',()=>tr.remove());action.appendChild(remove);tr.appendChild(action);document.getElementById('memberRows').appendChild(tr);document.getElementById('memberName').value='';form.hidden=true;});
+</script>
+</body></html>
