@@ -519,14 +519,14 @@ function exportCsv(){const rows=[["Référence","Désignation","Catégorie","Typ
 function exportMovementsCsv(){
  const safeCell=value=>{
   const text=String(value??"");
-  const protectedText=/^[\\s]*[=+@\\-]/.test(text)?"'"+text:text;
+  const protectedText=/^\s*[=+@\-]/.test(text)?"'"+text:text;
   return '"'+protectedText.replace(/"/g,'""')+'"';
  };
  const rows=[["Date et heure","Type","Référence matériel","Désignation","Quantité","Unité","Origine","Destination / emplacement","Observation"],
  ...(db.movements||[]).slice().sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))).map(m=>[
   m.date?new Date(m.date).toLocaleString("fr-FR"): "",m.type,m.materialRef||"",m.materialName||"",m.quantity,m.unit||"",m.source||"",m.location||m.destination||"",m.note||""
  ])];
- const csv="\\uFEFF"+rows.map(row=>row.map(safeCell).join(";")).join("\\n");
+ const csv="\uFEFF"+rows.map(row=>row.map(safeCell).join(";")).join("\n");
  download("ks-btp-mouvements.csv",csv,"text/csv;charset=utf-8");
 }
 function download(name,data,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
