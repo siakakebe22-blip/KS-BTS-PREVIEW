@@ -550,7 +550,7 @@ function exportMaintenanceCsv(){
  const rows=(db.maintenance||[]).slice().sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))).map(m=>[m.date?new Date(m.date).toLocaleDateString("fr-FR"):"",m.materialRef,m.materialName,m.description,m.status,m.cost,db.currency]);
  exportStructuredCsv("ks-btp-maintenance.csv",["Date","Référence matériel","Désignation","Intervention","Statut","Coût","Devise"],rows);
 }
-function download(name,data,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+function download(name,data,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1500)}
 document.querySelectorAll(".nav-link[data-page]").forEach(nav=>{nav.addEventListener("click",e=>{e.preventDefault();go(nav.dataset.page)});});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(!b)return;const act=b.dataset.action,mid=b.dataset.id;
  if(storageLoadError&&["add-material","edit-material","delete-material","add-site","delete-site","add-movement","open-voucher","add-maintenance","edit-maintenance","delete-maintenance","save-settings"].includes(act)){alert(storageLoadError);return}if(act==="add-material")openItem();if(act==="edit-material")openItem(db.materials.find(m=>m.id===mid));if(act==="delete-material"){
