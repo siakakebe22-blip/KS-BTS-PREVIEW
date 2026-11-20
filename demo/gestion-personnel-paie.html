@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KS BTP — Personnel & paie</title>
+<style>
+:root{--navy:#14263d;--blue:#2457a7;--bg:#f3f6fa;--line:#dfe6ef;--muted:#68778b;--green:#147d54;--red:#b33c42}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#1b2939;font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:white;padding:20px max(18px,calc((100% - 1180px)/2));display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}
+header h1{font-size:21px;margin:0}header p{margin:4px 0 0;color:#c8d4e3;font-size:13px}
+main{max-width:1180px;margin:22px auto;padding:0 16px}.notice{background:#fff7e6;border:1px solid #f1d49b;color:#76551a;padding:12px 14px;border-radius:10px;margin-bottom:16px;font-size:13px}
+nav{display:flex;gap:8px;overflow:auto;margin-bottom:16px}nav button{white-space:nowrap;border:1px solid var(--line);background:white;border-radius:9px;padding:10px 14px;color:#34445a;font-weight:650;cursor:pointer}nav button.active{background:var(--blue);border-color:var(--blue);color:white}
+.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.stat,.card{background:white;border:1px solid var(--line);border-radius:12px;padding:16px}.stat small{color:var(--muted)}.stat strong{display:block;font-size:23px;margin-top:7px}.card{margin-bottom:14px}.card h2{font-size:17px;margin:0 0 14px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.toolbar input,.toolbar select{max-width:240px}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cbd5e1;border-radius:8px;background:white;font:inherit;color:#1b2939}label{display:block;font-size:13px;color:#526176;margin-bottom:5px}.field{min-width:0}.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.formgrid .wide{grid-column:1/-1}
+button.primary,button.secondary,button.danger{border:0;border-radius:8px;padding:10px 14px;font-weight:650;cursor:pointer}.primary{background:var(--blue);color:white}.secondary{background:#eaf0f8;color:#24466f}.danger{background:#fbeaec;color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
+.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:700px}th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);font-size:13px}th{color:#58677a;background:#f8fafc;font-weight:700}.muted{color:var(--muted)}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#e8f4ee;color:var(--green);font-size:11px;font-weight:700}.pill.off{background:#fcecee;color:var(--red)}.actions{display:flex;gap:6px;flex-wrap:wrap}.empty{text-align:center;color:var(--muted);padding:22px}
+.summaryline{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}.summaryline:last-child{border:0}.right{text-align:right}.small{font-size:12px}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.formgrid{grid-template-columns:1fr 1fr}.formgrid .wide{grid-column:1/-1}main{margin-top:14px}}
+@media(max-width:440px){.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.stat strong{font-size:19px}}
+@media print{body{background:white}header,nav,.notice,.noprint,button{display:none!important}main{max-width:none;margin:0;padding:0}.panel{display:none!important}.panel.active{display:block!important}.card,.stat{break-inside:avoid;border:1px solid #bbb}.tablewrap{overflow:visible}table{min-width:0}th,td{font-size:10px;padding:6px}}
+</style>
+</head>
+<body>
+<header><div><h1>KS BTP — Gestion du personnel et de la paie</h1><p>Administration des employés, présences, avances et paie mensuelle</p></div><div class="small">Espace entreprise · Démonstration</div></header>
+<main>
+<div class="notice"><strong>Version de prévisualisation :</strong> toutes les données sont fictives et restent dans cette page. Aucun compte réel, paiement, bulletin officiel ou enregistrement Supabase n’est créé. Les données disparaissent au rechargement.</div>
+<nav class="noprint">
+<button class="active" data-tab="personnel">Personnel</button><button data-tab="presence">Présences</button><button data-tab="avances">Avances</button><button data-tab="paie">Paie mensuelle</button><button data-tab="rapport">Rapports</button>
+</nav>
+<section id="personnel" class="panel active">
+<div class="grid"><div class="stat"><small>Employés enregistrés</small><strong id="kEmployees">0</strong></div><div class="stat"><small>Employés actifs</small><strong id="kActive">0</strong></div><div class="stat"><small>Masse salariale mensuelle</small><strong id="kSalary">0 GNF</strong></div><div class="stat"><small>Avances en cours</small><strong id="kAdvance">0 GNF</strong></div></div>
+<div class="card"><h2>Ajouter un employé</h2><form id="employeeForm" class="formgrid">
+<div class="field"><label>Matricule *</label><input id="empCode" required placeholder="EMP-001"></div><div class="field"><label>Nom complet *</label><input id="empName" required placeholder="Nom et prénom"></div><div class="field"><label>Téléphone</label><input id="empPhone" placeholder="6XX XX XX XX"></div>
+<div class="field"><label>Fonction *</label><select id="empRole" required><option value="">Choisir</option><option>Chef de chantier</option><option>Magasinier</option><option>Maçon</option><option>Manœuvre</option><option>Conducteur</option><option>Comptable</option><option>Autre</option></select></div><div class="field"><label>Type de contrat</label><select id="empContract"><option>Mensuel</option><option>Journalier</option><option>Temporaire</option><option>Prestataire</option></select></div><div class="field"><label>Date d'embauche</label><input id="empDate" type="date"></div>
+<div class="field"><label>Salaire mensuel de base (GNF) *</label><input id="empSalary" type="number" min="1" step="1" required placeholder="1500000"></div><div class="field"><label>Chantier / affectation</label><input id="empSite" placeholder="Chantier principal"></div><div class="field"><label>Statut</label><select id="empStatus"><option>Actif</option><option>Suspendu</option><option>Sorti</option></select></div>
+<div class="wide"><button class="primary" type="submit">Enregistrer l'employé</button></div></form></div>
+<div class="card"><div class="toolbar"><h2 style="margin:0">Liste du personnel</h2><input id="employeeSearch" placeholder="Rechercher matricule, nom, fonction…"></div><div class="tablewrap"><table><thead><tr><th>Matricule</th><th>Nom</th><th>Fonction</th><th>Contrat</th><th>Salaire de base</th><th>Statut</th><th>Action</th></tr></thead><tbody id="employeeRows"></tbody></table></div></div>
+</section>
+<section id="presence" class="panel">
+<div class="card"><h2>Enregistrer une présence ou absence</h2><form id="attendanceForm" class="formgrid">
+<div class="field"><label>Employé *</label><select id="attEmployee" required></select></div><div class="field"><label>Date *</label><input id="attDate" type="date" required></div><div class="field"><label>Statut *</label><select id="attStatus"><option>Présent</option><option>Absent justifié</option><option>Absent non justifié</option><option>Congé</option><option>Repos</option></select></div>
+<div class="field"><label>Heures travaillées</label><input id="attHours" type="number" min="0" max="24" step=".5" value="8"></div><div class="field wide"><label>Observation</label><input id="attNote" placeholder="Motif ou remarque (facultatif)"></div><div class="wide"><button class="primary">Enregistrer la journée</button></div></form></div>
+<div class="card"><div class="toolbar"><h2 style="margin:0">Registre des présences</h2><input id="attendanceMonth" type="month"></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Employé</th><th>Statut</th><th>Heures</th><th>Observation</th></tr></thead><tbody id="attendanceRows"></tbody></table></div></div>
+</section>
+<section id="avances" class="panel">
+<div class="card"><h2>Enregistrer une avance sur salaire</h2><form id="advanceForm" class="formgrid">
+<div class="field"><label>Employé *</label><select id="advEmployee" required></select></div><div class="field"><label>Date *</label><input id="advDate" type="date" required></div><div class="field"><label>Montant de l'avance (GNF) *</label><input id="advAmount" type="number" min="1" step="1" required></div><div class="field wide"><label>Motif</label><input id="advReason" placeholder="Motif de l'avance"></div><div class="wide"><button class="primary">Enregistrer l'avance</button></div></form></div>
+<div class="card"><h2>Historique des avances</h2><div class="tablewrap"><table><thead><tr><th>Date</th><th>Employé</th><th>Montant</th><th>Motif</th><th>Période</th></tr></thead><tbody id="advanceRows"></tbody></table></div></div>
+</section>
+<section id="paie" class="panel">
+<div class="card"><h2>Calcul de la paie mensuelle</h2><div class="formgrid"><div class="field"><label>Période de paie</label><input id="payMonth" type="month"></div><div class="field"><label>Jours de référence du mois</label><input id="payDays" type="number" min="1" max="31" value="26"></div><div class="field" style="align-self:end"><button id="calculatePay" class="primary" type="button">Calculer la paie</button></div></div><p class="muted small">Le calcul de démonstration déduit les absences non justifiées enregistrées durant le mois et les avances du même mois. Il ne calcule pas les cotisations légales, impôts, heures supplémentaires ou indemnités.</p></div>
+<div class="grid"><div class="stat"><small>Salaire brut de base</small><strong id="payGross">0 GNF</strong></div><div class="stat"><small>Déductions absences</small><strong id="payAbsence">0 GNF</strong></div><div class="stat"><small>Avances déduites</small><strong id="payAdvances">0 GNF</strong></div><div class="stat"><small>Net à payer estimé</small><strong id="payNet">0 GNF</strong></div></div>
+<div class="card"><div class="toolbar"><h2 style="margin:0">État de paie</h2><button class="secondary" onclick="window.print()">Imprimer l'état</button></div><div class="tablewrap"><table><thead><tr><th>Employé</th><th>Base</th><th>Absences non justifiées</th><th>Déduction</th><th>Avances</th><th>Net estimé</th></tr></thead><tbody id="payRows"></tbody></table></div></div>
+</section>
+<section id="rapport" class="panel">
+<div class="grid"><div class="stat"><small>Journées enregistrées</small><strong id="rDays">0</strong></div><div class="stat"><small>Absences non justifiées</small><strong id="rAbsences">0</strong></div><div class="stat"><small>Total avances enregistrées</small><strong id="rAdvances">0 GNF</strong></div><div class="stat"><small>Employés sortis / suspendus</small><strong id="rInactive">0</strong></div></div>
+<div class="card"><h2>Synthèse administrative</h2><div id="reportSummary"></div><p class="muted small">Rapport calculé à partir des données fictives saisies dans cette session de démonstration.</p><button class="secondary noprint" onclick="window.print()">Imprimer le rapport</button></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id), money=n=>new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(Math.round(Number(n)||0))+' GNF';
+let employees=[
+{id:'EMP-001',name:'Mamadou Diallo',phone:'',role:'Magasinier',contract:'Mensuel',date:'2026-01-05',salary:1800000,site:'Stock central',status:'Actif'},
+{id:'EMP-002',name:'Ibrahima Camara',phone:'',role:'Chef de chantier',contract:'Mensuel',date:'2026-02-01',salary:2500000,site:'Chantier A',status:'Actif'},
+{id:'EMP-003',name:'Alpha Barry',phone:'',role:'Maçon',contract:'Journalier',date:'2026-03-10',salary:1200000,site:'Chantier A',status:'Actif'}
+];
+let attendances=[],advances=[],payroll=[];
+const today=new Date().toISOString().slice(0,10), month=today.slice(0,7);
+$('empDate').value=today;$('attDate').value=today;$('advDate').value=today;$('attendanceMonth').value=month;$('payMonth').value=month;
+function refresh(){
+$('kEmployees').textContent=employees.length;$('kActive').textContent=employees.filter(e=>e.status==='Actif').length;
+$('kSalary').textContent=money(employees.filter(e=>e.status==='Actif').reduce((s,e)=>s+e.salary,0));
+$('kAdvance').textContent=money(advances.reduce((s,a)=>s+a.amount,0));
+$('employeeRows').innerHTML=employees.length?employees.map(e=>'<tr><td>'+esc(e.id)+'</td><td>'+esc(e.name)+'<div class="muted small">'+esc(e.phone)+'</div></td><td>'+esc(e.role)+'</td><td>'+esc(e.contract)+'</td><td>'+money(e.salary)+'</td><td><span class="pill '+(e.status==='Actif'?'':'off')+'">'+esc(e.status)+'</span></td><td><button class="danger small" onclick="changeStatus(\''+e.id+'\')">Changer statut</button></td></tr>').join(''):'<tr><td colspan="7" class="empty">Aucun employé.</td></tr>';
+const options='<option value="">Sélectionner un employé</option>'+employees.filter(e=>e.status==='Actif').map(e=>'<option value="'+esc(e.id)+'">'+esc(e.id+' — '+e.name)+'</option>').join('');
+$('attEmployee').innerHTML=options;$('advEmployee').innerHTML=options;
+renderAttendance();renderAdvances();renderReport();
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function changeStatus(id){const e=employees.find(x=>x.id===id);if(!e)return;const next=prompt('Nouveau statut : Actif, Suspendu ou Sorti',e.status);if(['Actif','Suspendu','Sorti'].includes(next)){e.status=next;refresh();}}
+$('employeeForm').addEventListener('submit',ev=>{ev.preventDefault();const id=$('empCode').value.trim().toUpperCase(),name=$('empName').value.trim(),salary=Number($('empSalary').value);
+if(!id||!name||!Number.isFinite(salary)||salary<=0){alert('Vérifiez les champs obligatoires et le salaire.');return;}
+if(employees.some(e=>e.id.toLowerCase()===id.toLowerCase())){alert('Ce matricule existe déjà. Choisissez un matricule unique.');return;}
+employees.push({id,name,phone:$('empPhone').value.trim(),role:$('empRole').value,contract:$('empContract').value,date:$('empDate').value,salary,site:$('empSite').value.trim(),status:$('empStatus').value});ev.target.reset();$('empDate').value=today;refresh();alert('Employé ajouté à la démonstration.');});
+$('employeeSearch').addEventListener('input',()=>{const q=$('employeeSearch').value.toLowerCase();document.querySelectorAll('#employeeRows tr').forEach(r=>r.style.display=r.textContent.toLowerCase().includes(q)?'':'none');});
+$('attendanceForm').addEventListener('submit',ev=>{ev.preventDefault();const employeeId=$('attEmployee').value,date=$('attDate').value;if(!employeeId||!date){alert('Sélectionnez un employé et une date.');return;}if(attendances.some(a=>a.employeeId===employeeId&&a.date===date)){alert('Une fiche existe déjà pour cet employé à cette date.');return;}attendances.push({employeeId,date,status:$('attStatus').value,hours:Number($('attHours').value)||0,note:$('attNote').value.trim()});ev.target.reset();$('attDate').value=today;$('attHours').value=8;refresh();});
+function renderAttendance(){const m=$('attendanceMonth').value;const list=attendances.filter(a=>!m||a.date.startsWith(m)).sort((a,b)=>b.date.localeCompare(a.date));$('attendanceRows').innerHTML=list.length?list.map(a=>{const e=employees.find(x=>x.id===a.employeeId);return '<tr><td>'+a.date+'</td><td>'+esc(e?.name||a.employeeId)+'</td><td>'+esc(a.status)+'</td><td>'+a.hours+'</td><td>'+esc(a.note)+'</td></tr>';}).join(''):'<tr><td colspan="5" class="empty">Aucune présence enregistrée pour cette période.</td></tr>';}
+$('attendanceMonth').addEventListener('change',renderAttendance);
+$('advanceForm').addEventListener('submit',ev=>{ev.preventDefault();const employeeId=$('advEmployee').value,date=$('advDate').value,amount=Number($('advAmount').value),e=employees.find(x=>x.id===employeeId);if(!e||!date||!Number.isFinite(amount)||amount<=0){alert('Vérifiez l’employé, la date et le montant.');return;}const period=date.slice(0,7),used=advances.filter(a=>a.employeeId===employeeId&&a.period===period).reduce((s,a)=>s+a.amount,0);if(used+amount>e.salary){alert('Avance refusée : le total des avances de ce mois dépasserait le salaire de base.');return;}advances.push({employeeId,date,amount,reason:$('advReason').value.trim(),period});ev.target.reset();$('advDate').value=today;refresh();});
+function renderAdvances(){$('advanceRows').innerHTML=advances.length?advances.slice().reverse().map(a=>{const e=employees.find(x=>x.id===a.employeeId);return '<tr><td>'+a.date+'</td><td>'+esc(e?.name||a.employeeId)+'</td><td>'+money(a.amount)+'</td><td>'+esc(a.reason)+'</td><td>'+a.period+'</td></tr>';}).join(''):'<tr><td colspan="5" class="empty">Aucune avance enregistrée.</td></tr>';}
+function calculate(){const period=$('payMonth').value,days=Number($('payDays').value);if(!period||!Number.isInteger(days)||days<1||days>31){alert('Indiquez une période et un nombre de jours valide (1 à 31).');return;}let gross=0,ded=0,adv=0;payroll=employees.filter(e=>e.status==='Actif').map(e=>{const abs=attendances.filter(a=>a.employeeId===e.id&&a.date.startsWith(period)&&a.status==='Absent non justifié').length;const deduction=Math.min(e.salary,Math.round(e.salary/days*abs));const advance=advances.filter(a=>a.employeeId===e.id&&a.period===period).reduce((s,a)=>s+a.amount,0);const net=Math.max(0,e.salary-deduction-advance);gross+=e.salary;ded+=deduction;adv+=advance;return {employeeId:e.id,base:e.salary,abs,deduction,advance,net};});$('payGross').textContent=money(gross);$('payAbsence').textContent=money(ded);$('payAdvances').textContent=money(adv);$('payNet').textContent=money(payroll.reduce((s,p)=>s+p.net,0));$('payRows').innerHTML=payroll.length?payroll.map(p=>{const e=employees.find(x=>x.id===p.employeeId);return '<tr><td>'+esc(e.name)+'</td><td>'+money(p.base)+'</td><td>'+p.abs+'</td><td>'+money(p.deduction)+'</td><td>'+money(p.advance)+'</td><td><strong>'+money(p.net)+'</strong></td></tr>';}).join(''):'<tr><td colspan="6" class="empty">Aucun employé actif.</td></tr>';}
+$('calculatePay').addEventListener('click',calculate);
+function renderReport(){const absent=attendances.filter(a=>a.status==='Absent non justifié').length;$('rDays').textContent=attendances.length;$('rAbsences').textContent=absent;$('rAdvances').textContent=money(advances.reduce((s,a)=>s+a.amount,0));$('rInactive').textContent=employees.filter(e=>e.status!=='Actif').length;$('reportSummary').innerHTML='<div class="summaryline"><span>Effectif total</span><strong>'+employees.length+'</strong></div><div class="summaryline"><span>Employés actifs</span><strong>'+employees.filter(e=>e.status==='Actif').length+'</strong></div><div class="summaryline"><span>Présences et absences saisies</span><strong>'+attendances.length+'</strong></div><div class="summaryline"><span>Absences non justifiées</span><strong>'+absent+'</strong></div><div class="summaryline"><span>Avances cumulées</span><strong>'+money(advances.reduce((s,a)=>s+a.amount,0))+'</strong></div>';}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));}));
+refresh();calculate();
+</script>
+</body></html>
