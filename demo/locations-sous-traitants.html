@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KS BTP — Locations & sous-traitants</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#182230;background:#f3f5f8}*{box-sizing:border-box}body{margin:0}.top{background:#142b46;color:#fff;padding:22px max(16px,calc((100% - 1180px)/2))}.top small{color:#c8d7e8}.wrap{max-width:1180px;margin:20px auto;padding:0 14px}.warning{background:#fff4d6;border:1px solid #efd58b;padding:12px;border-radius:10px;margin-bottom:16px;color:#624a0b}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat,.panel{background:white;border:1px solid #e0e5eb;border-radius:12px;padding:15px}.stat b{display:block;font-size:23px;margin-top:7px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tabs button,button{border:0;border-radius:8px;padding:10px 13px;background:#1e5b91;color:#fff;font-weight:600;cursor:pointer}.tabs button{background:#e3ebf3;color:#193a58}.tabs button.active{background:#1e5b91;color:#fff}.panel{margin-bottom:15px}.section{display:none}.section.active{display:block}h2{font-size:19px;margin:0 0 14px}form{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}label{font-size:13px;color:#4c5b6b;display:block}input,select,textarea{width:100%;padding:10px;border:1px solid #ccd5df;border-radius:7px;margin-top:5px;background:#fff}textarea{min-height:40px}form button{align-self:end;height:40px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e7ebef;font-size:13px}th{color:#536274;background:#f7f9fb}.muted{color:#687789;font-size:13px}.danger{background:#9e3434}.secondary{background:#536579}.actions{display:flex;gap:6px;flex-wrap:wrap}.pill{background:#e8f2fb;color:#1b527d;padding:4px 7px;border-radius:20px;font-size:12px}.right{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.empty{text-align:center;color:#718096;padding:20px}@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}form{grid-template-columns:1fr 1fr}}@media(max-width:480px){form{grid-template-columns:1fr}.top{padding:18px 14px}.stat b{font-size:19px}}@media print{.tabs,form,.actions,.warning{display:none!important}.section{display:block!important}.top{background:white;color:black}.panel,.stat{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="top"><small>KS BTP · GESTION DES OPÉRATIONS</small><h1>Locations & sous-traitants</h1><div>Contrats, prestations, factures et suivi des coûts par chantier</div></header>
+<main class="wrap">
+<div class="warning"><b>Version de démonstration :</b> données fictives conservées uniquement dans cette page. Aucun contrat réel, paiement ou enregistrement Supabase n'est effectué.</div>
+<div class="stats">
+<div class="stat">Contrats actifs<b id="sContracts">0</b></div><div class="stat">Locations en cours<b id="sRentals">0</b></div><div class="stat">Montant facturé<b id="sBilled">0 GNF</b></div><div class="stat">Reste à payer<b id="sDue">0 GNF</b></div>
+</div>
+<nav class="tabs">
+<button class="active" data-tab="contracts">Contrats</button><button data-tab="rentals">Matériel loué</button><button data-tab="services">Sous-traitance</button><button data-tab="invoices">Factures & paiements</button><button data-tab="reports">Rapports</button>
+</nav>
+<section id="contracts" class="section active">
+<div class="panel"><h2>Enregistrer un contrat / fournisseur</h2><form id="contractForm">
+<label>Référence contrat<input name="ref" required placeholder="CTR-001"></label><label>Prestataire / entreprise<input name="provider" required></label><label>Type<select name="type"><option>Location</option><option>Sous-traitance</option></select></label>
+<label>Chantier<input name="site" required placeholder="Ex. Bâtiment Gbessia"></label><label>Date de début<input name="start" type="date" required></label><label>Date de fin<input name="end" type="date" required></label>
+<label>Montant prévu (GNF)<input name="amount" type="number" min="1" step="1" required></label><label>Responsable<input name="manager" placeholder="Nom du responsable"></label><label>Statut<select name="status"><option>Actif</option><option>Terminé</option><option>Suspendu</option></select></label><button>Ajouter le contrat</button></form></div>
+<div class="panel"><div class="right"><h2>Registre des contrats</h2><button class="secondary" onclick="print()">Imprimer</button></div><div class="table-wrap"><table><thead><tr><th>Référence</th><th>Prestataire</th><th>Type</th><th>Chantier</th><th>Période</th><th>Montant prévu</th><th>Statut</th></tr></thead><tbody id="contractRows"></tbody></table></div></div>
+</section>
+<section id="rentals" class="section">
+<div class="panel"><h2>Suivi du matériel loué</h2><form id="rentalForm">
+<label>Contrat<select name="contract" id="rentalContract" required></select></label><label>Désignation du matériel<input name="equipment" required placeholder="Camion benne, bétonnière…"></label><label>Quantité<input name="qty" type="number" min="1" step="1" required></label>
+<label>Tarif journalier (GNF)<input name="rate" type="number" min="1" required></label><label>Date de mise à disposition<input name="from" type="date" required></label><label>Date de retour prévue<input name="to" type="date" required></label><label>État<select name="status"><option>En cours</option><option>Retourné</option><option>En retard</option></select></label><button>Ajouter la location</button></form></div>
+<div class="panel"><h2>Matériel loué</h2><div class="table-wrap"><table><thead><tr><th>Contrat</th><th>Matériel</th><th>Qté</th><th>Tarif/jour</th><th>Début</th><th>Retour prévu</th><th>État</th></tr></thead><tbody id="rentalRows"></tbody></table></div></div>
+</section>
+<section id="services" class="section">
+<div class="panel"><h2>Prestations sous-traitées</h2><form id="serviceForm">
+<label>Contrat<select name="contract" id="serviceContract" required></select></label><label>Prestation<input name="task" required placeholder="Terrassement, plomberie…"></label><label>Unité<input name="unit" placeholder="m², forfait, jour"></label><label>Quantité<input name="qty" type="number" min="0.01" step="0.01" required></label><label>Prix unitaire (GNF)<input name="price" type="number" min="1" required></label><label>Date de réalisation<input name="date" type="date" required></label><button>Enregistrer la prestation</button></form></div>
+<div class="panel"><h2>Prestations enregistrées</h2><div class="table-wrap"><table><thead><tr><th>Contrat</th><th>Prestation</th><th>Quantité</th><th>Prix unitaire</th><th>Total</th><th>Date</th></tr></thead><tbody id="serviceRows"></tbody></table></div></div>
+</section>
+<section id="invoices" class="section">
+<div class="panel"><h2>Enregistrer une facture</h2><form id="invoiceForm">
+<label>Contrat<select name="contract" id="invoiceContract" required></select></label><label>N° facture<input name="ref" required></label><label>Date facture<input name="date" type="date" required></label><label>Montant TTC (GNF)<input name="amount" type="number" min="1" required></label><label>Échéance<input name="due" type="date"></label><button>Ajouter la facture</button></form></div>
+<div class="panel"><h2>Factures et règlements</h2><div class="table-wrap"><table><thead><tr><th>Facture</th><th>Contrat</th><th>Date</th><th>Montant</th><th>Payé</th><th>Solde</th><th>Action</th></tr></thead><tbody id="invoiceRows"></tbody></table></div></div>
+</section>
+<section id="reports" class="section">
+<div class="panel"><div class="right"><h2>Synthèse financière</h2><button onclick="print()">Imprimer le rapport</button></div><p id="reportSummary" class="muted"></p><div class="table-wrap"><table><thead><tr><th>Contrat</th><th>Prestataire</th><th>Prévision</th><th>Facturé</th><th>Payé</th><th>Solde</th></tr></thead><tbody id="reportRows"></tbody></table></div></div>
+</section>
+</main>
+<script>
+const contracts=[],rentals=[],services=[],invoices=[];
+const fmt=n=>new Intl.NumberFormat('fr-FR').format(Number(n)||0)+' GNF';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function contractName(id){return contracts.find(x=>x.ref===id)?.provider||id}
+function options(id){document.getElementById(id).innerHTML='<option value="">Choisir un contrat</option>'+contracts.map(c=>'<option value="'+esc(c.ref)+'">'+esc(c.ref+' — '+c.provider)+'</option>').join('')}
+function render(){
+document.getElementById('sContracts').textContent=contracts.filter(x=>x.status==='Actif').length;
+document.getElementById('sRentals').textContent=rentals.filter(x=>x.status==='En cours').length;
+const billed=invoices.reduce((s,x)=>s+x.amount,0),paid=invoices.reduce((s,x)=>s+x.paid,0);
+document.getElementById('sBilled').textContent=fmt(billed);document.getElementById('sDue').textContent=fmt(billed-paid);
+document.getElementById('contractRows').innerHTML=contracts.map(c=>'<tr><td>'+esc(c.ref)+'</td><td>'+esc(c.provider)+'</td><td>'+esc(c.type)+'</td><td>'+esc(c.site)+'</td><td>'+esc(c.start)+' → '+esc(c.end)+'</td><td>'+fmt(c.amount)+'</td><td><span class="pill">'+esc(c.status)+'</span></td></tr>').join('')||'<tr><td colspan="7" class="empty">Aucun contrat enregistré</td></tr>';
+['rentalContract','serviceContract','invoiceContract'].forEach(options);
+document.getElementById('rentalRows').innerHTML=rentals.map(x=>'<tr><td>'+esc(x.contract)+'</td><td>'+esc(x.equipment)+'</td><td>'+x.qty+'</td><td>'+fmt(x.rate)+'</td><td>'+esc(x.from)+'</td><td>'+esc(x.to)+'</td><td>'+esc(x.status)+'</td></tr>').join('')||'<tr><td colspan="7" class="empty">Aucune location</td></tr>';
+document.getElementById('serviceRows').innerHTML=services.map(x=>'<tr><td>'+esc(x.contract)+'</td><td>'+esc(x.task)+'</td><td>'+x.qty+' '+esc(x.unit)+'</td><td>'+fmt(x.price)+'</td><td>'+fmt(x.qty*x.price)+'</td><td>'+esc(x.date)+'</td></tr>').join('')||'<tr><td colspan="6" class="empty">Aucune prestation</td></tr>';
+document.getElementById('invoiceRows').innerHTML=invoices.map((x,i)=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.contract)+'</td><td>'+esc(x.date)+'</td><td>'+fmt(x.amount)+'</td><td>'+fmt(x.paid)+'</td><td>'+fmt(x.amount-x.paid)+'</td><td><button '+(x.paid>=x.amount?'disabled':'')+' onclick="pay('+i+')">Saisir règlement</button></td></tr>').join('')||'<tr><td colspan="7" class="empty">Aucune facture</td></tr>';
+document.getElementById('reportRows').innerHTML=contracts.map(c=>{const inv=invoices.filter(x=>x.contract===c.ref),b=inv.reduce((s,x)=>s+x.amount,0),p=inv.reduce((s,x)=>s+x.paid,0);return '<tr><td>'+esc(c.ref)+'</td><td>'+esc(c.provider)+'</td><td>'+fmt(c.amount)+'</td><td>'+fmt(b)+'</td><td>'+fmt(p)+'</td><td>'+fmt(b-p)+'</td></tr>'}).join('')||'<tr><td colspan="6" class="empty">Aucune donnée</td></tr>';
+document.getElementById('reportSummary').textContent='Prévision contractuelle : '+fmt(contracts.reduce((s,x)=>s+x.amount,0))+' · Facturation : '+fmt(billed)+' · Règlements saisis : '+fmt(paid)+' · Solde fournisseur : '+fmt(billed-paid);
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab))}));
+document.getElementById('contractForm').addEventListener('submit',e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));if(contracts.some(x=>x.ref.toLowerCase()===d.ref.trim().toLowerCase()))return alert('Cette référence de contrat existe déjà.');if(d.end<d.start)return alert('La date de fin doit être postérieure à la date de début.');contracts.push({...d,ref:d.ref.trim(),amount:Number(d.amount)});e.target.reset();render()});
+document.getElementById('rentalForm').addEventListener('submit',e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));if(d.to<d.from)return alert('La date de retour doit être postérieure à la date de départ.');if(rentals.some(x=>x.equipment.toLowerCase()===d.equipment.trim().toLowerCase()&&x.status==='En cours'))return alert('Cet équipement est déjà déclaré en location active.');rentals.push({...d,qty:Number(d.qty),rate:Number(d.rate)});e.target.reset();render()});
+document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));services.push({...d,qty:Number(d.qty),price:Number(d.price)});e.target.reset();render()});
+document.getElementById('invoiceForm').addEventListener('submit',e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));if(invoices.some(x=>x.ref.toLowerCase()===d.ref.trim().toLowerCase()))return alert('Ce numéro de facture existe déjà.');invoices.push({...d,amount:Number(d.amount),paid:0,ref:d.ref.trim()});e.target.reset();render()});
+function pay(i){const x=invoices[i],remaining=x.amount-x.paid,raw=prompt('Montant du règlement (solde restant : '+fmt(remaining)+')');if(raw===null)return;const n=Number(raw);if(!Number.isFinite(n)||n<=0)return alert('Saisissez un montant valide.');if(n>remaining)return alert('Le règlement dépasse le solde de la facture.');x.paid+=n;render()}
+render();
+</script>
+</body></html>
