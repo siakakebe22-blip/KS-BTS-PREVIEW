@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a"><title>KS BTP — Console générale (aperçu)</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#17263a;background:#f2f5f9}*{box-sizing:border-box}body{margin:0}.top{background:#14243a;color:#fff;padding:16px max(16px,calc((100vw - 1180px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:10px}.mark{display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:#294563;font-weight:900}.brand small{display:block;color:#bdcde0;font-size:12px}.top a{color:#e4edf7;text-decoration:none;font-size:13px}.wrap{max-width:1180px;margin:auto;padding:22px 16px 48px}.warning{background:#fff8e7;border:1px solid #f0dca7;color:#785514;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:18px}.head{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap;margin:8px 0 18px}.head h1{margin:0 0 5px;font-size:25px}.muted{color:#6c7b8f;font-size:13px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab,.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.tab{background:#e5ebf2;color:#33465d}.tab.active,.btn.primary{background:#1d5b91;color:#fff}.btn.secondary{background:#e8eef5;color:#294563}.btn.danger{background:#fff0ef;color:#a3322b}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.panel{background:#fff;border:1px solid #e1e8f0;border-radius:14px;padding:16px}.metric small{font-size:12px;color:#718096}.metric strong{display:block;font-size:26px;margin:8px 0 3px}.metric span{font-size:12px;color:#8793a3}.section{margin-top:18px}.section h2{font-size:17px;margin:0 0 12px}.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.tools input,.form input,.form select{border:1px solid #d7e0ea;border-radius:9px;padding:10px 11px;font:inherit;min-width:0;background:white}.tools input{flex:1;min-width:180px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #edf1f5;font-size:13px}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#758499}.status{display:inline-block;padding:5px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#edf1f5;color:#536477}.status.active,.status.confirmed{background:#e7f5eb;color:#17613a}.status.pending,.status.trial{background:#fff4dc;color:#805b0d}.status.suspended,.status.expired,.status.rejected{background:#fff0ef;color:#9d342c}.empty{padding:22px;text-align:center;color:#77869a;font-size:13px}.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form label{display:grid;gap:6px;font-size:12px;color:#536477}.form .full{grid-column:1/-1}.actions{display:flex;gap:8px;flex-wrap:wrap}.hint{font-size:12px;color:#77869a;line-height:1.5}.hidden{display:none!important}.foot{text-align:center;color:#8793a3;font-size:11px;margin-top:24px}@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.top{padding:13px 15px}.grid{grid-template-columns:1fr 1fr}.metric strong{font-size:22px}.form{grid-template-columns:1fr}.form .full{grid-column:auto}.head h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><div class="mark">KS</div><div><strong>KS BTP</strong><small>Administration générale</small></div></div><a href="connexion.html">← Espace entreprise</a></header>
+<main class="wrap">
+<div class="warning"><strong>APERÇU DE CONCEPTION — DONNÉES FICTIVES.</strong> Cette console n'est reliée ni à Supabase ni à un système de paiement. Les ajouts et changements restent uniquement dans la mémoire de cette page et disparaissent à son actualisation. Aucun abonnement réel n'est créé.</div>
+<div class="head"><div><h1>Console générale</h1><div class="muted">Administration des entreprises clientes et de leurs abonnements</div></div><span class="status trial">Mode démonstration</span></div>
+<div class="grid">
+<div class="metric"><small>Entreprises</small><strong id="mCompanies">3</strong><span>Exemples de démonstration</span></div>
+<div class="metric"><small>Abonnements actifs</small><strong id="mActive">1</strong><span>Hors périodes d'essai</span></div>
+<div class="metric"><small>En période d'essai</small><strong id="mTrials">1</strong><span>Comptes de démonstration</span></div>
+<div class="metric"><small>Paiements à vérifier</small><strong id="mPending">1</strong><span>Exemples fictifs</span></div>
+</div>
+<nav class="tabs" aria-label="Sections de la console">
+<button class="tab active" data-tab="overview">Vue générale</button><button class="tab" data-tab="companies">Entreprises</button><button class="tab" data-tab="subscriptions">Abonnements</button><button class="tab" data-tab="payments">Paiements</button>
+</nav>
+<section id="overview" class="view">
+<div class="section panel"><h2>Activité de démonstration</h2><div class="table-wrap"><table><thead><tr><th>Entreprise</th><th>Offre</th><th>État</th><th>Échéance</th></tr></thead><tbody id="overviewRows"></tbody></table></div></div>
+<div class="section panel"><h2>Règles de gestion</h2><p class="hint">Chaque entreprise possède un espace isolé. Les employés utilisent les accès fournis par leur entreprise et ne paient pas individuellement. Un paiement en attente ne doit jamais activer automatiquement un abonnement. Une suspension ne supprime aucune donnée métier.</p></div>
+</section>
+<section id="companies" class="view hidden">
+<div class="section panel"><div class="head"><div><h2>Répertoire des entreprises</h2><div class="muted">Créer et consulter les fiches entreprises (démonstration)</div></div><button class="btn primary" id="showForm">＋ Ajouter une entreprise</button></div>
+<div id="companyFormWrap" class="hidden"><form id="companyForm" class="form"><label>Nom de l'entreprise<input id="companyName" required maxlength="100" placeholder="Ex. Entreprise BTP Alpha"></label><label>Contact principal<input id="companyContact" required maxlength="100" placeholder="Nom du responsable"></label><label>Téléphone<input id="companyPhone" maxlength="30" placeholder="+224 ..."></label><label>Adresse<input id="companyAddress" maxlength="140" placeholder="Ville, quartier"></label><label class="full">Offre de départ<select id="companyPlan"><option>Essentiel</option><option>Professionnel</option><option>Entreprise</option><option>Essai gratuit</option></select></label><div class="full actions"><button class="btn primary" type="submit">Ajouter à la démonstration</button><button class="btn secondary" type="button" id="cancelForm">Annuler</button></div></form><p class="hint">Les champs servent uniquement à illustrer le formulaire. Ne saisissez pas de données confidentielles.</p></div>
+<div class="tools"><input id="companySearch" placeholder="Rechercher une entreprise…" aria-label="Rechercher une entreprise"></div>
+<div class="table-wrap"><table><thead><tr><th>Entreprise</th><th>Contact</th><th>Offre</th><th>Statut</th><th>Action</th></tr></thead><tbody id="companyRows"></tbody></table></div></div>
+</section>
+<section id="subscriptions" class="view hidden"><div class="section panel"><h2>Suivi des abonnements</h2><p class="hint">Les tarifs affichés sont des hypothèses de travail non validées. Aucun prélèvement ni renouvellement automatique n'est effectué.</p><div class="table-wrap"><table><thead><tr><th>Entreprise</th><th>Offre</th><th>Prix indicatif / mois</th><th>État</th><th>Échéance</th></tr></thead><tbody id="subscriptionRows"></tbody></table></div></div></section>
+<section id="payments" class="view hidden"><div class="section panel"><h2>Vérification des paiements</h2><p class="hint">Un reçu ou une déclaration de paiement doit être vérifié par un agent habilité avant activation de l'abonnement. Les paiements ci-dessous sont fictifs.</p><div class="table-wrap"><table><thead><tr><th>Référence</th><th>Entreprise</th><th>Montant</th><th>Date</th><th>État</th><th>Action</th></tr></thead><tbody id="paymentRows"></tbody></table></div></div></section>
+<div class="foot">KS BTP · Console générale · Maquette interactive locale · Aucun accès aux données réelles</div>
+</main>
+<script>
+const companies=[
+{id:1,name:"KS BTP Koloma",contact:"Direction KS",phone:"+224 000 00 00 00",address:"Koloma, Conakry",plan:"Entreprise",status:"active",sub:"Actif",due:"20/12/2026"},
+{id:2,name:"BTP Alpha (exemple)",contact:"M. Diallo",phone:"+224 000 00 00 01",address:"Conakry",plan:"Professionnel",status:"trial",sub:"Essai",due:"27/11/2026"},
+{id:3,name:"Construction Beta (exemple)",contact:"Mme Camara",phone:"+224 000 00 00 02",address:"Kindia",plan:"Essentiel",status:"pending",sub:"En attente",due:"—"}
+];
+let payments=[{ref:"DEMO-2026-001",company:"Construction Beta (exemple)",amount:"100 000 GNF",date:"19/11/2026",status:"pending"}];
+const prices={"Essentiel":"100 000 GNF","Professionnel":"250 000 GNF","Entreprise":"500 000 GNF","Essai gratuit":"0 GNF"};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function badge(s){const c=s==="Actif"||s==="active"?"active":s==="Confirmé"||s==="confirmed"?"confirmed":s==="Essai"||s==="trial"?"trial":s==="Suspendu"||s==="suspended"?"suspended":s==="Expiré"||s==="expired"?"expired":s==="Rejeté"||s==="rejected"?"rejected":"pending";return '<span class="status '+c+'">'+esc(s)+'</span>'}
+function render(){
+$("mCompanies").textContent=companies.length;$("mActive").textContent=companies.filter(x=>x.sub==="Actif").length;$("mTrials").textContent=companies.filter(x=>x.sub==="Essai").length;$("mPending").textContent=payments.filter(x=>x.status==="pending").length;
+$("overviewRows").innerHTML=companies.map(c=>'<tr><td>'+esc(c.name)+'</td><td>'+esc(c.plan)+'</td><td>'+badge(c.sub)+'</td><td>'+esc(c.due)+'</td></tr>').join("");
+const q=$("companySearch").value.toLowerCase();
+$("companyRows").innerHTML=companies.filter(c=>(c.name+" "+c.contact+" "+c.address).toLowerCase().includes(q)).map(c=>'<tr><td><strong>'+esc(c.name)+'</strong><br><span class="muted">'+esc(c.address)+'</span></td><td>'+esc(c.contact)+'<br><span class="muted">'+esc(c.phone)+'</span></td><td>'+esc(c.plan)+'</td><td>'+badge(c.status)+'</td><td><button class="btn secondary" data-toggle="'+c.id+'">'+(c.status==="suspended"?"Réactiver":"Suspendre")+'</button></td></tr>').join("")||'<tr><td colspan="5" class="empty">Aucun résultat.</td></tr>';
+$("subscriptionRows").innerHTML=companies.map(c=>'<tr><td>'+esc(c.name)+'</td><td>'+esc(c.plan)+'</td><td>'+prices[c.plan]+'</td><td>'+badge(c.sub)+'</td><td>'+esc(c.due)+'</td></tr>').join("");
+$("paymentRows").innerHTML=payments.map((p,i)=>'<tr><td>'+esc(p.ref)+'</td><td>'+esc(p.company)+'</td><td>'+esc(p.amount)+'</td><td>'+esc(p.date)+'</td><td>'+badge(p.status==="pending"?"En attente":p.status==="confirmed"?"Confirmé":"Rejeté")+'</td><td>'+(p.status==="pending"?'<div class="actions"><button class="btn primary" data-payment="'+i+'" data-state="confirmed">Confirmer (démo)</button><button class="btn danger" data-payment="'+i+'" data-state="rejected">Rejeter (démo)</button></div>':'—')+'</td></tr>').join("")||'<tr><td colspan="6" class="empty">Aucun paiement déclaré.</td></tr>';
+}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!==b.dataset.tab));}));
+$("showForm").addEventListener("click",()=>{$("companyFormWrap").classList.remove("hidden");$("companyName").focus()});
+$("cancelForm").addEventListener("click",()=>{$("companyFormWrap").classList.add("hidden");$("companyForm").reset()});
+$("companyForm").addEventListener("submit",e=>{e.preventDefault();const plan=$("companyPlan").value;companies.push({id:Math.max(...companies.map(c=>c.id))+1,name:$("companyName").value.trim(),contact:$("companyContact").value.trim(),phone:$("companyPhone").value.trim(),address:$("companyAddress").value.trim(),plan,status:plan==="Essai gratuit"?"trial":"pending",sub:plan==="Essai gratuit"?"Essai":"En attente",due:"À définir"});$("companyForm").reset();$("companyFormWrap").classList.add("hidden");render();});
+$("companySearch").addEventListener("input",render);
+document.addEventListener("click",e=>{const t=e.target.closest("[data-toggle]");if(t){const c=companies.find(x=>x.id===Number(t.dataset.toggle));if(c){c.status=c.status==="suspended"?"active":"suspended";c.sub=c.status==="suspended"?"Suspendu":(c.plan==="Essai gratuit"?"Essai":"En attente");render();}}const p=e.target.closest("[data-payment]");if(p){const item=payments[Number(p.dataset.payment)];if(item){item.status=p.dataset.state;render();}}});
+render();
+</script>
+</body></html>
