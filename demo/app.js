@@ -334,41 +334,41 @@ function submitMaintenance(e){
 }
 function stockAudit(){
   const knownSites=new Map((db.sites||[]).map(site=>[site.id,site.name]));
-  const locationRows=[],invalidBalances=[];
+  const locationRows=[],invalidBalances=[],invalidMaterials=[],invalidMovements=[],duplicateMaterialRefs=[];
   const materials=db.materials.map(m=>{
-    const current=Number(m.quantity)||0;
+    const rawCurrent=Number(m.quantity);
+    if(!Number.isFinite(rawCurrent)||rawCurrent<0)invalidMaterials.push({ref:m.ref,name:m.name,quantity:m.quantity});
+    const current=Number.isFinite(rawCurrent)?rawCurrent:0;
     const rawBalances=Array.isArray(m.stockBalances)?m.stockBalances:[];
     const auditCopy={...m,stockBalances:rawBalances.map(b=>({...b}))};
     const balances=ensureStockBalances(auditCopy);
     const balanceTotal=balances.reduce((sum,b)=>sum+(Number.isFinite(Number(b.quantity))?Number(b.quantity):0),0);
     const seen=new Set();
     rawBalances.forEach(b=>{
-      const q=Number(b.quantity),key=String(b.locationId||"");
+      const q=Number(b.quantity),key=String(b.locationId||'');
       if(!Number.isFinite(q)||q<0)invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:b.quantity});
-      if(seen.has(key))invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:"Emplacement en double"});
+      if(seen.has(key))invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:'Emplacement en double'});
       seen.add(key);
-      if(key!=="__unallocated__"&&key!=="central"&&!knownSites.has(key))invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:"Chantier introuvable"});
+      if(key!=='__unallocated__'&&key!=='central'&&!knownSites.has(key)&&!db.sites.some(site=>site.name===key)&&!db.sites.some(site=>site.name===b.locationName))invalidBalances.push({ref:m.ref,name:m.name,location:b.locationName||key,quantity:'Chantier introuvable'});
     });
-    balances.forEach(b=>{
-      const q=Number(b.quantity),key=String(b.locationId||"");
-      if(q>0)locationRows.push({ref:m.ref,name:m.name,unit:m.unit,location:b.locationName||(key==="central"?"Magasin central":knownSites.get(key)||"Emplacement non identifié"),quantity:q});
-    });
+    balances.forEach(b=>{const q=Number(b.quantity),key=String(b.locationId||'');if(Number.isFinite(q)&&q>0)locationRows.push({ref:m.ref,name:m.name,unit:m.unit,location:b.locationName||(key==='central'?'Magasin central':knownSites.get(key)||'Emplacement non identifié'),quantity:q})});
     return {id:m.id,ref:m.ref,name:m.name,unit:m.unit,current,balanceTotal,difference:Number((current-balanceTotal).toFixed(4)),hasBalances:true};
   });
+  const refCounts=new Map();
+  db.materials.forEach(m=>{const ref=String(m.ref||'').trim();if(ref)refCounts.set(ref,(refCounts.get(ref)||0)+1)});
+  refCounts.forEach((count,ref)=>{if(count>1)duplicateMaterialRefs.push({ref,count})});
   const balanceIssues=materials.filter(m=>Math.abs(m.difference)>0.0001);
-  const documents=Array.isArray(db.documents)?db.documents:[];
-  const movements=Array.isArray(db.movements)?db.movements:[];
-  const unlinkedDocuments=documents.filter(d=>d.ref&&!movements.some(m=>String(m.note||"").startsWith("Document "+String(d.ref))));
-  const refs=documents.map(d=>String(d.ref||"")).filter(Boolean);
-  const duplicateRefs=refs.filter((ref,index)=>refs.indexOf(ref)!==index);
+  const documents=Array.isArray(db.documents)?db.documents:[],movements=Array.isArray(db.movements)?db.movements:[];
+  const unlinkedDocuments=documents.filter(d=>d.ref&&!movements.some(m=>String(m.note||'').startsWith('Document '+String(d.ref))));
+  const refs=documents.map(d=>String(d.ref||'')).filter(Boolean);
+  const duplicateRefs=[...new Set(refs.filter((ref,index)=>refs.indexOf(ref)!==index))];
   const orphanMovements=movements.filter(m=>m.materialId&&!db.materials.some(item=>item.id===m.materialId));
+  const invalidMovements=[];
+  movements.forEach(m=>{const q=Number(m.quantity);if(!Number.isFinite(q)||q<=0)invalidMovements.push({id:m.id,type:m.type,quantity:m.quantity,material:m.materialName||m.materialId||'Matériel non identifié'})});
+  const orphanDocuments=documents.filter(d=>d.materialId&&!db.materials.some(item=>item.id===d.materialId));
   const totalByUnit={},balanceByUnit={};
-  materials.forEach(m=>{
-    const unit=String(m.unit||"unité");
-    totalByUnit[unit]=(totalByUnit[unit]||0)+m.current;
-    balanceByUnit[unit]=(balanceByUnit[unit]||0)+m.balanceTotal;
-  });
-  return {materials,balanceIssues,unlinkedDocuments,locationRows,invalidBalances,duplicateRefs,orphanMovements,totalByUnit,balanceByUnit};
+  materials.forEach(m=>{const unit=String(m.unit||'unité');totalByUnit[unit]=(totalByUnit[unit]||0)+m.current;balanceByUnit[unit]=(balanceByUnit[unit]||0)+m.balanceTotal});
+  return {materials,balanceIssues,unlinkedDocuments,locationRows,invalidBalances,duplicateRefs,orphanMovements,totalByUnit,balanceByUnit,invalidMaterials,invalidMovements,duplicateMaterialRefs,orphanDocuments};
 }
 function printGeneralReport(){
  const w=window.open("","_blank");
@@ -385,7 +385,7 @@ function printGeneralReport(){
  const maintenanceRows=db.maintenance.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(x=>"<tr><td>"+date(x.date)+"</td><td>"+esc(x.materialName||x.materialRef||"—")+"</td><td>"+esc(x.description||"—")+"</td><td>"+esc(x.status||"—")+"</td><td>"+esc(x.cost??"—")+"</td></tr>").join("")||'<tr><td colspan="5">Aucune intervention</td></tr>';
  const purchaseRows=(db.purchases||[]).slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(x=>"<tr><td>"+date(x.date)+"</td><td>"+esc(x.materialRef||x.materialName||"—")+"</td><td>"+esc(x.supplier||"—")+"</td><td>"+esc(x.invoice||"—")+"</td><td>"+esc(x.quantity??"—")+"</td><td>"+money(x.total??0)+"</td></tr>").join("")||'<tr><td colspan="6">Aucun achat enregistré</td></tr>';
  const activityRows=(db.activityLog||[]).slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(x=>"<tr><td>"+date(x.date)+"</td><td>"+esc(x.action||"")+"</td><td>"+esc(x.entity||"")+"</td><td>"+esc(x.description||"")+"</td></tr>").join("")||'<tr><td colspan="4">Aucune activité</td></tr>';
- const issues=audit.balanceIssues.length+audit.invalidBalances.length+audit.duplicateRefs.length+audit.orphanMovements.length+audit.unlinkedDocuments.length;
+ const issues=audit.balanceIssues.length+audit.invalidBalances.length+audit.duplicateRefs.length+audit.orphanMovements.length+audit.unlinkedDocuments.length+audit.invalidMaterials.length+audit.invalidMovements.length+audit.duplicateMaterialRefs.length+audit.orphanDocuments.length;
  const html="<!doctype html><html lang='fr'><head><meta charset='utf-8'><title>Rapport général KS BTP</title><style>@page{size:A4 landscape;margin:12mm}body{font:9pt Arial;color:#172334}h1{color:#14243a;margin-bottom:4px}h2{background:#14243a;color:white;padding:8px;margin-top:22px}h3{color:#d97720;margin:14px 0 5px}p{margin:5px 0 12px}.meta,.summary{background:#f1f4f8;padding:10px;margin:10px 0}table{width:100%;border-collapse:collapse;margin:8px 0 18px}th{background:#e8edf3}th,td{border:1px solid #b8c2ce;padding:6px;text-align:left;vertical-align:top}thead{display:table-header-group}tr{break-inside:avoid}.summary{display:flex;gap:22px;flex-wrap:wrap}.summary span{font-weight:bold}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body><h1>"+esc(db.company||"KS BTP")+"</h1><h2>RAPPORT GÉNÉRAL DE GESTION</h2><div class='meta'>Document consolidé · Généré le "+now+" · Données enregistrées sur cet appareil</div><div class='summary'><span>Matériels : "+db.materials.length+"</span><span>Chantiers : "+db.sites.length+"</span><span>Mouvements : "+db.movements.length+"</span><span>Bons : "+db.documents.length+"</span><span>Maintenances : "+db.maintenance.length+"</span><span>Achats : "+(db.purchases||[]).length+"</span><span>Anomalies à vérifier : "+issues+"</span></div><h2>1. ÉTAT DU PARC MATÉRIEL</h2><p>Stock par unité : "+esc(byUnit(db.materials.map(m=>({unit:m.unit,quantity:m.quantity}))))+"</p><table><thead><tr><th>Référence</th><th>Désignation</th><th>Catégorie</th><th>Stock total</th><th>Emplacement déclaré</th></tr></thead><tbody>"+materialRows+"</tbody></table><h2>2. SITUATION DES CHANTIERS</h2><p>Le stock disponible est le solde réel par emplacement. Les bons de sortie sont comptés comme consommations ; les mouvements liés aux bons ne sont pas comptés deux fois.</p>"+siteSections+"<h2>3. HISTORIQUE DES MOUVEMENTS</h2><table><thead><tr><th>Date</th><th>Opération</th><th>Matériel</th><th>Quantité</th><th>Emplacement</th><th>Observation</th></tr></thead><tbody>"+movementRows+"</tbody></table><h2>4. BONS DE STOCK</h2><table><thead><tr><th>Référence</th><th>Date</th><th>Type</th><th>Matériel</th><th>Quantité</th><th>Chantier</th></tr></thead><tbody>"+docRows+"</tbody></table><h2>5. ACHATS ET RÉCEPTIONS</h2><table><thead><tr><th>Date</th><th>Matériel</th><th>Fournisseur</th><th>Facture</th><th>Quantité</th><th>Montant</th></tr></thead><tbody>"+purchaseRows+"</tbody></table><h2>6. MAINTENANCE</h2><table><thead><tr><th>Date</th><th>Matériel</th><th>Intervention</th><th>Statut</th><th>Coût</th></tr></thead><tbody>"+maintenanceRows+"</tbody></table><h2>7. CONTRÔLE DE COHÉRENCE</h2><p>Écarts de ventilation : "+audit.balanceIssues.length+" · Soldes invalides : "+audit.invalidBalances.length+" · Références de bons en double : "+audit.duplicateRefs.length+" · Mouvements orphelins : "+audit.orphanMovements.length+" · Bons sans mouvement lié : "+audit.unlinkedDocuments.length+".</p><p>Ce rapport ne corrige et ne modifie aucune donnée. Les quantités initiales historiques sont conservées ; les anomalies éventuelles doivent être vérifiées avant toute correction.</p><h2>8. JOURNAL DES ACTIVITÉS</h2><table><thead><tr><th>Date</th><th>Action</th><th>Rubrique</th><th>Détails</th></tr></thead><tbody>"+activityRows+"</tbody></table><p>KS BTP · Fin du rapport général</p><script>window.onload=()=>window.print()</script></body></html>";
  w.document.open();w.document.write(html);w.document.close();
 }
