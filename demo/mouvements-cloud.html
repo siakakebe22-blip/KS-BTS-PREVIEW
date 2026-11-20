@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14243a"><title>KS BTP — Historique des mouvements</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#17263a;background:#f2f5f9}*{box-sizing:border-box}body{margin:0}.top{background:#14243a;color:#fff;padding:16px max(16px,calc((100vw - 1050px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:10px}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#294563;font-weight:900}.brand small{display:block;color:#bdcde0;font-size:12px}.back{color:#e4edf7;text-decoration:none;font-size:13px}.container{max-width:1050px;margin:auto;padding:22px 16px 44px}.intro h1{font-size:24px;margin:0 0 6px}.muted{color:#68788d;font-size:13px;line-height:1.5}.notice{padding:12px 14px;border-radius:11px;background:#fff8e8;border:1px solid #f0dfb4;color:#745317;font-size:13px;line-height:1.5;margin:14px 0}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.metric,.panel{background:#fff;border:1px solid #e1e8f0;border-radius:14px;padding:16px}.metric small{color:#718096;font-size:12px}.metric strong{display:block;font-size:23px;margin-top:8px}.toolbar{display:grid;grid-template-columns:1fr 220px;gap:10px;margin:14px 0}.toolbar input,.toolbar select{width:100%;border:1px solid #cfd9e5;border-radius:9px;padding:11px 12px;font:inherit;background:#fff}.table-wrap{overflow:auto;background:#fff;border:1px solid #e1e8f0;border-radius:14px}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:12px;border-bottom:1px solid #e8edf3;font-size:13px}th{background:#f7f9fc;color:#506176;font-size:12px}tbody tr:last-child td{border-bottom:0}.empty{text-align:center;color:#718096;padding:24px}.foot{text-align:center;color:#8793a3;font-size:11px;margin-top:22px}@media(max-width:650px){.metrics{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.top{padding:14px 16px}}
+</style></head>
+<body>
+<header class="top"><div class="brand"><div class="mark">KS</div><div><strong>KS BTP</strong><small>Historique des mouvements · espace cloud</small></div></div><a class="back" id="backLink" href="dashboard-cloud.html">← Tableau de bord</a></header>
+<main class="container">
+<div class="intro"><h1>Historique des mouvements</h1><p class="muted" id="companyName">Entreprise : vérification…</p></div>
+<div class="notice"><strong>Consultation sécurisée.</strong> Cette page affiche les mouvements déjà enregistrés dans Supabase. Elle ne crée, ne modifie et ne supprime aucune donnée. Les nouveaux mouvements restent désactivés dans cette phase.</div>
+<div class="metrics"><article class="metric"><small>Mouvements chargés</small><strong id="totalCount">—</strong></article><article class="metric"><small>Entrées / réceptions</small><strong id="inCount">—</strong></article><article class="metric"><small>Sorties</small><strong id="outCount">—</strong></article></div>
+<div class="toolbar"><input id="search" type="search" placeholder="Rechercher une référence ou une note…" aria-label="Rechercher"><select id="typeFilter" aria-label="Filtrer par type"><option value="">Tous les types</option></select></div>
+<div class="table-wrap"><table><thead><tr><th>Date et heure</th><th>Type</th><th>Référence</th><th>Quantité</th><th>Observation</th></tr></thead><tbody id="movementRows"><tr><td class="empty" colspan="5">Chargement…</td></tr></tbody></table></div>
+<p class="muted" id="resultInfo">Chargement des mouvements…</p>
+<div class="foot">KS BTP · Lecture seule · 100 mouvements les plus récents au maximum</div>
+</main>
+<script type="module" src="mouvements-cloud.js?v=readonly-movements-1"></script>
+</body></html>
