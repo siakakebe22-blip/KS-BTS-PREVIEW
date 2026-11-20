@@ -67,6 +67,17 @@ async function loadPage() {
   $("siteState").textContent = knownSites.length
     ? knownSites.length + " chantier(s) consulté(s) en lecture seule."
     : "Aucun chantier enregistré. Vous pouvez préparer une première fiche en aperçu.";
+
+  // Fiche de démonstration préremplie : elle reste locale et n'est jamais envoyée à Supabase.
+  if (!knownSites.some((site) => (site.name || "").trim().toLocaleLowerCase() === "bâtiment gbessia")) {
+    $("siteReference").value = "CH-001";
+    $("siteName").value = "Bâtiment Gbessia";
+    $("siteAddress").value = "Gbessia, Conakry";
+    $("siteManager").value = "Barry";
+    $("siteStatus").value = "active";
+    $("siteDescription").value = "Aucune";
+    form.requestSubmit();
+  }
 }
 $("siteSearch").addEventListener("input", () => {
   const term = $("siteSearch").value.trim().toLocaleLowerCase();
